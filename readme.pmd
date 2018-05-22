@@ -96,7 +96,7 @@ def execute(units, tasks, scheduler):
 
   eus = [ExecutionUnit(unit) for unit in units]
 
-  while (tasks or [idle for idle in eus if idle.running!=None]) and time<60:
+  while (tasks or [idle for idle in eus if idle.running!=None]) and time<600:
     for eu in eus:
       if eu.running and eu.idle_at <= time:
         eus.append(ExecutionUnit(eu.complete(time)))
@@ -128,7 +128,7 @@ def fifo(eus, tasks, time):
 
   tasks.append(task)
 
-execute([Nexus] + [Probe] * 4,[Probe] * 3 + [Pylon],fifo)
+execute([Nexus] + [Probe] * 4, [Probe] * 3 + [Pylon, Gateway], fifo)
 ```
 
 #done = [Nexus] + 4 * [Probe]
