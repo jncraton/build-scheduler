@@ -1,4 +1,4 @@
-SRC = readme.pmd
+SRC = readme
 
 all: $(SRC).html
 
@@ -18,6 +18,9 @@ $(SRC).pdf: $(SRC).html
 	
 run: $(SRC).py
 	python3 $(SRC).py
+
+test: $(SRC).py
+	python3 -m doctest $(SRC).py
 
 clean:
 	rm -f $(SRC).pdf $(SRC).md $(SRC).py
