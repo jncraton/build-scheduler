@@ -114,11 +114,6 @@ def execute(units, tasks, scheduler):
 
   print("Execution complete in %d seconds." % time)
 
-class Op:
-  def __init__(self, eu, end_time):
-    self.eu = eu
-    self.end_time = end_time
-
 def fifo(eus, tasks, time):
   """ Assign tasks to execution units in the order they were supplied."""
 
