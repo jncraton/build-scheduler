@@ -11,15 +11,6 @@ We will first apply some traditional algorithms to handle the typical case where
 
 First, we need to define some units:
 
-```python, echo=False
-import matplotlib
-try:
-  get_ipython().config
-except:
-  matplotlib.use("Agg")
-import matplotlib.pyplot as plt
-```
-
 ```python
 from collections import namedtuple
 
@@ -239,6 +230,8 @@ class Node:
 
 for task in TASKS:
   DAG.add_node(Node(task))
+
+import matplotlib.pyplot as plt
 
 nx.draw(DAG, with_labels=True, font_weight='bold')
 ```    

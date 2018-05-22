@@ -20,9 +20,11 @@ run: $(SRC).py
 	python3 $(SRC).py
 
 test: $(SRC).py
-	python3 -m doctest $(SRC).py
+	cat testhead.py $(SRC).py > $(SRC)-test.py
+	
+	python3 -m doctest $(SRC)-test.py
 
 clean:
-	rm -f $(SRC).pdf $(SRC).md $(SRC).py $(SRC).html
+	rm -f $(SRC).pdf $(SRC).md $(SRC).py $(SRC)-test.py $(SRC).html
 	rm -rf figures
 	rm -rf __pycache__
