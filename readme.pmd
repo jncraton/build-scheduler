@@ -19,7 +19,7 @@ Unit = namedtuple('ExecutionUnit', ['name','executed_on','min','gas','supply','t
 Nexus = Unit('Nexus','Probe',400,0,-10,75,None)
 Assimilator = Unit('Assimilator','Probe',100,0,0,25,None)
 Pylon = Unit('Pylon','Probe',100,0,-8,19,None)
-Gateway = Unit('Gateway','Probe',150,0,0,38,Pylon)
+Gateway = Unit('Gateway','Probe',150,0,0,38,'Pylon')
 
 Probe = Unit('Probe','Nexus',50,0,1,13,None)
 Zealot = Unit('Zealot','Gateway',100,0,2,25,None)
@@ -206,8 +206,8 @@ execute(INITIAL[:], TASKS[:], reorder, debug=True)
 
 We were able to remove 13s of stalling on this simple task by simply using reordering.
 
-Operation Directed Acyclic Graph
-================================
+Directed Acyclic Graph
+======================
 
 This is where the more challenging algorithms begin. There are two factors that make this scheduling task complex:
 
@@ -228,7 +228,7 @@ class Node:
   def __str__(self):
     return self.task.name
 
-for task in INITIAL + TASKS:
+for task in TASKS:
   DAG.add_node(Node(task))
 
 for n1 in DAG.nodes:
@@ -236,10 +236,38 @@ for n1 in DAG.nodes:
     if n2.task.executed_on == n1.task.name:
       DAG.add_edge(n1,n2)
   
-import matplotlib.pyplot as plt
+import seaborn
+seaborn.set()
 
 nx.draw(DAG, with_labels=True)
-```    
+```
+
+Next, we need to process our DAG into a list that is sorted topologically. [6]
+
+Kahn's Algorithm
+----------------
+
+We'll simply apply Kahn's algorithm to do the sorting[10]. Here's the psuedocode from Wikipedia [6]:
+
+    L ← Empty list that will contain the sorted elements
+    S ← Set of all nodes with no incoming edge
+    while S is non-empty do
+        remove a node n from S
+        add n to tail of L
+        for each node m with an edge e from n to m do
+            remove edge e from the graph
+            if m has no other incoming edges then
+                insert m into S
+    if graph has edges then
+        return error (graph has at least one cycle)
+    else 
+        return L (a topologically sorted order)
+
+Now we simply sort our DAG topologically:
+
+```python3
+[str(n) for n in nx.topological_sort(DAG)]
+```
 
 References
 ==========
@@ -253,3 +281,4 @@ References
 7. https://en.wikipedia.org/wiki/Coffman%E2%80%93Graham_algorithm
 8. https://en.wikipedia.org/wiki/Job_shop_scheduling
 9. https://en.wikipedia.org/wiki/Tomasulo_algorithm
+10. Kahn, Arthur B. (1962), "Topological sorting of large networks", Communications of the ACM, 5 (11): 558–562, doi:10.1145/368996.369025.
