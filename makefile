@@ -23,6 +23,6 @@ test: $(SRC).py
 	python3 -m doctest $(SRC).py
 
 clean:
-	rm -f $(SRC).pdf $(SRC).md $(SRC).py
+	rm -f $(SRC).pdf $(SRC).md $(SRC).py $(SRC).html
 	rm -rf figures
 	rm -rf __pycache__
