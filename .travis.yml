@@ -6,9 +6,9 @@ python:
 os:
     - linux
 before_install:
-  	- sudo apt install graphviz graphviz-dev
+    - sudo apt install graphviz graphviz-dev
 install:
-  	- pip3 install -r requirements.txt
+    - pip3 install -r requirements.txt
 script:
     - make test
     - make readme.md
