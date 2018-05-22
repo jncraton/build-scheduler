@@ -1,6 +1,8 @@
 % Algorithm Report 1: Task Scheduling
 % Jon Craton
 
+[![Build Status](https://travis-ci.org/jncraton/build-scheduler.svg?branch=master)](https://travis-ci.org/jncraton/build-scheduler)
+
 Scheduling algoritms are important in many areas of Computer Science including CPU design, compiler design[1], and process scheduling. I will explore the task of applying scheduling to optimizing the ordering of dependent production tasks in the game StarCraft: Brood War.
 
 I will try to use CPU architecture metaphors as much as possible throughout this document to try to make as many connections to existing algorithms as possible. Anything that can perform a task will be thought of as an Execution Unit[3]. One unique aspect of scheduling execution unit in the case of Brood War is that our CPU is able to build new execution units on the fly.
