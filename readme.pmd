@@ -127,11 +127,11 @@ def execute(units, tasks, scheduler, debug=False):
   """
   Executes a set of tasks using a supplied scheduler
   
-  >>> execute([Nexus] + [Probe] * 4, [Probe], fifo)
+  >>> execute([Nexus] + [Probe] * 4, [Probe], lambda *x: None)
   14
-  >>> execute([Nexus] + [Probe] * 4, [Probe] * 4 + [Pylon, Gateway, Zealot], fifo)
+  >>> execute([Nexus] + [Probe] * 4, [Probe] * 4 + [Pylon, Gateway, Zealot], lambda *x: None)
   127
-  >>> execute([Nexus] + [Probe] * 4, [Probe] * 4 + [Pylon, Gateway, Zealot, Nexus, Zealot], fifo)
+  >>> execute([Nexus] + [Probe] * 4, [Probe] * 4 + [Pylon, Gateway, Zealot, Nexus, Zealot], lambda *x: None)
   197
   """
 
