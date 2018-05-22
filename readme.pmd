@@ -16,7 +16,7 @@ Unit = namedtuple('ExecutionUnit', ['name','executed_on','min','gas','supply','t
 
 Nexus = Unit('Nexus','Probe',400,0,-10,75,None)
 Assimilator = Unit('Assimilator','Probe',100,0,0,25,None)
-Pylon = Unit('Pylon','Probe',100,0,8,19,None)
+Pylon = Unit('Pylon','Probe',100,0,-8,19,None)
 Gateway = Unit('Gateway','Probe',150,0,0,38,Pylon)
 
 Probe = Unit('Probe','Nexus',50,0,1,13,None)
@@ -76,9 +76,7 @@ class ExecutionUnit:
     self.idle_at = 0
     self.running = None
 
-  def complete(self, time):
-    print('%ds: Completed %s' % (time, self.running.name))
-  
+  def complete(self):
     completed = self.running
     self.running = None
     self.idle_at = 0
@@ -91,44 +89,50 @@ class ExecutionUnit:
   
 def execute(units, tasks, scheduler):
   time = 0
-  min = 50
-  gas = 0
+  res = [50,0,6]
 
   eus = [ExecutionUnit(unit) for unit in units]
 
   while (tasks or [idle for idle in eus if idle.running!=None]) and time<600:
     for eu in eus:
       if eu.running and eu.idle_at <= time:
-        eus.append(ExecutionUnit(eu.complete(time)))
+        print('%ds (%d minerals, %d gas, %d supply): Completed %s' % (time, res[0], res[1], res[2], eu.running.name))
+        if eu.running.supply < 0:
+          res[2] -= eu.running.supply
+        eus.append(ExecutionUnit(eu.complete()))
 
-    scheduler(eus, tasks, time)
+    scheduler(eus, tasks, time, res)
 
     peons = len([t for t in eus if t.unit == Probe])
     bases = len([t for t in eus if t.unit == Nexus])
     gases = len([t for t in eus if t.unit == Assimilator])
     
-    min += mining_rate(bases, gases, peons)[0]
-    gas += mining_rate(bases, gases, peons)[1]
+    res[0] += mining_rate(bases, gases, peons)[0]
+    res[1] += mining_rate(bases, gases, peons)[1]
     
     time += 1
 
   print("Execution complete in %d seconds." % time)
 
-def fifo(eus, tasks, time):
+def fifo(eus, tasks, time, res):
   """ Assign tasks to execution units in the order they were supplied."""
 
   if not tasks: return
 
-  task = tasks.pop()
+  if tasks[0].min > res[0] or tasks[0].gas > res[1] or tasks[0].supply > res[2]: return
 
+  task = tasks.pop(0)
   for eu in eus:
     if not eu.running and (task.executed_on == None or eu.unit.name==task.executed_on):
+      res[0] -= task.min
+      res[1] -= task.gas
+      if task.supply > 0: # Otherwise we adjust supply on completion
+        res[2] -= task.supply
       eu.run(task, time)
       return
+  tasks.insert(0, task)
 
-  tasks.append(task)
-
-execute([Nexus] + [Probe] * 4, [Probe] * 3 + [Pylon, Gateway], fifo)
+execute([Nexus] + [Probe] * 4, [Probe] * 4 + [Pylon, Gateway, Zealot, Nexus, Zealot], fifo)
 ```
 
 #done = [Nexus] + 4 * [Probe]
