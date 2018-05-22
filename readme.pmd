@@ -87,7 +87,18 @@ class ExecutionUnit:
     self.running = task
     self.idle_at = task.time + time
   
-def execute(units, tasks, scheduler):
+def execute(units, tasks, scheduler, debug=False):
+  """
+  Executes a set of tasks using a supplied scheduler
+  
+  >>> execute([Nexus] + [Probe] * 4, [Probe], fifo)
+  14
+  >>> execute([Nexus] + [Probe] * 4, [Probe] * 4 + [Pylon, Gateway, Zealot], fifo)
+  127
+  >>> execute([Nexus] + [Probe] * 4, [Probe] * 4 + [Pylon, Gateway, Zealot, Nexus, Zealot], fifo)
+  197
+  """
+
   time = 0
   res = [50,0,6]
 
@@ -96,7 +107,8 @@ def execute(units, tasks, scheduler):
   while (tasks or [idle for idle in eus if idle.running!=None]) and time<600:
     for eu in eus:
       if eu.running and eu.idle_at <= time:
-        print('%ds (%d minerals, %d gas, %d supply): Completed %s' % (time, res[0], res[1], res[2], eu.running.name))
+        if debug:
+          print('%ds (%d minerals, %d gas, %d supply): Completed %s' % (time, res[0], res[1], res[2], eu.running.name))
         if eu.running.supply < 0:
           res[2] -= eu.running.supply
         eus.append(ExecutionUnit(eu.complete()))
@@ -112,7 +124,7 @@ def execute(units, tasks, scheduler):
     
     time += 1
 
-  print("Execution complete in %d seconds." % time)
+  return time
 
 def fifo(eus, tasks, time, res):
   """ Assign tasks to execution units in the order they were supplied."""
@@ -131,13 +143,7 @@ def fifo(eus, tasks, time, res):
       eu.run(task, time)
       return
   tasks.insert(0, task)
-
-execute([Nexus] + [Probe] * 4, [Probe] * 4 + [Pylon, Gateway, Zealot, Nexus, Zealot], fifo)
 ```
-
-#done = [Nexus] + 4 * [Probe]
-#todo = 5 * ['zealot'] + 12 * ['probe']
-
 
 References
 ==========
