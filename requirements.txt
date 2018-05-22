@@ -1,3 +1,4 @@
 pweave
 matplotlib
 networkx
+scipy
