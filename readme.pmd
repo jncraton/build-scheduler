@@ -219,10 +219,17 @@ We'll handle dependencies here in some depth and then explore exponential benefi
 ```python
 import networkx as nx
 
-DAG = nx.Graph()
+DAG = nx.DiGraph()
+
+class Node:
+  def __init__(self, task):
+    self.task = task
+
+  def __str__(self):
+    return self.task.name
 
 for task in TASKS:
-  DAG.add_node(task.name)
+  DAG.add_node(Node(task))
 
 import matplotlib.pyplot as plt
 
