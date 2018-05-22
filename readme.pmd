@@ -170,11 +170,37 @@ def fifo(eus, tasks, time, res):
 
   return
 
-execute([Nexus] + [Probe] * 4, [Probe] * 4 + [Pylon, Gateway, Zealot, Nexus, Zealot], fifo, debug=True)
+INITIAL = [Nexus] + [Probe] * 4
+TASKS = [Probe] * 4 + [Pylon] + [Probe] * 4 + [Gateway, Zealot, Zealot]
+
+execute(INITIAL[:], TASKS[:], fifo, debug=True)
 ```
 
 Reordering (out-of-order execution)
 ===================================
+
+We'll now implement a simple algorithm to allow future operations to be scheduled if the next operation is blocked. The CPU metaphor is not perfect here, but this borrows the concept of dependency handling and a reservation station from Tomasulo's algorithm. [4][9]
+
+This algorithm is still trivial in terms of both complexity (O(n)) and correctness (everything still runs), so I'll skip formal validation.
+
+```python
+def reorder(eus, tasks, time, res):
+  """
+  Reorders upcoming tasks if the next task is not runnable. This implements the first step of a selection sort to move the first task that can be run to the front of the task queue.
+
+  The algorithm used here is to simply put the first runnable task as the start of the task queue or do nothing
+  """
+
+  for (i, task) in enumerate(tasks):
+    for eu in eus:
+      if eu.can_run(task, res):
+        tasks.insert(0, tasks.pop(i))
+        return
+
+execute(INITIAL[:], TASKS[:], reorder, debug=True)
+```
+
+We were able to remove 13s of stalling on this simple task by simply using reordering.
 
 References
 ==========
@@ -187,3 +213,4 @@ References
 6. https://en.wikipedia.org/wiki/Topological_sorting
 7. https://en.wikipedia.org/wiki/Coffman%E2%80%93Graham_algorithm
 8. https://en.wikipedia.org/wiki/Job_shop_scheduling
+9. https://en.wikipedia.org/wiki/Tomasulo_algorithm
