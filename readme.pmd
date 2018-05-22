@@ -239,8 +239,6 @@ for n1 in DAG.nodes:
 import matplotlib.pyplot as plt
 
 nx.draw(DAG, with_labels=True)
-
-print(nx.nx_agraph.to_agraph(DAG))
 ```    
 
 References
