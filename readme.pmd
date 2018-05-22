@@ -124,11 +124,14 @@ def execute(units, tasks, scheduler, debug=False):
 
   eus = [ExecutionUnit(unit) for unit in units]
 
+  def message(msg):
+    if debug:
+      print('%ds (%d minerals, %d gas, %d supply): %s' % (time, res[0], res[1], res[2], msg))
+
   for time in range(0,600):
     for eu in eus:
       if eu.running and eu.idle_at <= time:
-        if debug:
-          print('%ds (%d minerals, %d gas, %d supply): Completed %s' % (time, res[0], res[1], res[2], eu.running.name))
+        message("Completed %s." % eu.running.name)
         if eu.running.supply < 0:
           res[2] -= eu.running.supply
         eus.append(ExecutionUnit(eu.complete()))
@@ -139,6 +142,7 @@ def execute(units, tasks, scheduler, debug=False):
     if tasks:
       for eu in eus:
         if eu.can_run(tasks[0], res):
+          message("Started %s" % tasks[0].name)
           eu.run(tasks[0], res, time)
           tasks.pop(0)
           break
