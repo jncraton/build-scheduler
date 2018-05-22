@@ -24,6 +24,10 @@ test: $(SRC).py
 	
 	python3 -m doctest $(SRC)-test.py
 
+setup:
+	sudo apt install graphviz graphviz-dev
+	pip3 install -r requirements.txt
+
 clean:
 	rm -f $(SRC).pdf $(SRC).md $(SRC).py $(SRC)-test.py $(SRC).html
 	rm -rf figures

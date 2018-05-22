@@ -2,3 +2,4 @@ pweave
 matplotlib
 networkx
 scipy
+pygraphviz
