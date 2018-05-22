@@ -206,6 +206,29 @@ execute(INITIAL[:], TASKS[:], reorder, debug=True)
 
 We were able to remove 13s of stalling on this simple task by simply using reordering.
 
+Operation Directed Acyclic Graph
+================================
+
+This is where the more challenging algorithms begin. There are two factors that make this scheduling task complex:
+
+1. Dependencies
+2. Exponential benefit
+
+We'll handle dependencies here in some depth and then explore exponential benefit. The first step to handling dependencies in a sensible way is to convert our operations into a directed acyclic graphs (DAG).
+
+```python
+import networkx as nx
+
+DAG = nx.Graph()
+
+for task in TASKS:
+  DAG.add_node(task.name)
+
+import matplotlib.pyplot as plt
+
+nx.draw(DAG, with_labels=True, font_weight='bold')
+```    
+
 References
 ==========
 
