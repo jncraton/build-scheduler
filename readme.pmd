@@ -104,22 +104,6 @@ class ExecutionUnit:
     return not self.running and (task.executed_on == None or self.unit.name==task.executed_on)
 ```
 
-FIFO (In-order execution)
-=========================
-
-One of the simplest scheduling algorithms that we can implement is a simple FIFO system:
-
-```python
-def fifo(eus, tasks, time, res):
-  """
-  Assign tasks to execution units in the order they were supplied.
-
-  This is a noop.
-  """
-
-  return
-```
-
 Now let's add an `execute` function to schedule a set of tasks. This function takes a list of execution units, a list of tasks to complete, and a scheduler function to decide what to run.
 
 ```python  
@@ -128,19 +112,19 @@ def execute(units, tasks, scheduler, debug=False):
   Executes a set of tasks using a supplied scheduler
   
   >>> execute([Nexus] + [Probe] * 4, [Probe], lambda *x: None)
-  14
+  13
   >>> execute([Nexus] + [Probe] * 4, [Probe] * 4 + [Pylon, Gateway, Zealot], lambda *x: None)
-  127
+  126
   >>> execute([Nexus] + [Probe] * 4, [Probe] * 4 + [Pylon, Gateway, Zealot, Nexus, Zealot], lambda *x: None)
-  197
+  196
   """
 
-  time = 0
+  time = -1
   res = [50,0,6]
 
   eus = [ExecutionUnit(unit) for unit in units]
 
-  while (tasks or [idle for idle in eus if idle.running!=None]) and time<600:
+  for time in range(0,600):
     for eu in eus:
       if eu.running and eu.idle_at <= time:
         if debug:
@@ -159,16 +143,34 @@ def execute(units, tasks, scheduler, debug=False):
           tasks.pop(0)
           break
 
+    if not tasks and not [idle for idle in eus if idle.running!=None]: return time
+
     peons = len([t for t in eus if t.unit == Probe])
     bases = len([t for t in eus if t.unit == Nexus])
     gases = len([t for t in eus if t.unit == Assimilator])
     
     res[0] += mining_rate(bases, gases, peons)[0]
     res[1] += mining_rate(bases, gases, peons)[1]
-    
-    time += 1
 
   return time
+```
+
+FIFO (In-order execution)
+=========================
+
+One of the simplest scheduling algorithms that we can implement is a simple FIFO system:
+
+```python
+def fifo(eus, tasks, time, res):
+  """
+  Assign tasks to execution units in the order they were supplied.
+
+  This is a noop.
+  """
+
+  return
+
+execute([Nexus] + [Probe] * 4, [Probe] * 4 + [Pylon, Gateway, Zealot, Nexus, Zealot], fifo, debug=True)
 ```
 
 Reordering (out-of-order execution)
