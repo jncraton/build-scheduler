@@ -228,12 +228,19 @@ class Node:
   def __str__(self):
     return self.task.name
 
-for task in TASKS:
+for task in INITIAL + TASKS:
   DAG.add_node(Node(task))
 
+for n1 in DAG.nodes:
+  for n2 in DAG.nodes:
+    if n2.task.executed_on == n1.task.name:
+      DAG.add_edge(n1,n2)
+  
 import matplotlib.pyplot as plt
 
-nx.draw(DAG, with_labels=True, font_weight='bold')
+nx.draw(DAG, with_labels=True)
+
+print(nx.nx_agraph.to_agraph(DAG))
 ```    
 
 References
