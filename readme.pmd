@@ -14,13 +14,13 @@ from collections import namedtuple
 
 Unit = namedtuple('ExecutionUnit', ['name','executed_on','min','gas','supply','time','requires'])
 
-Nexus = Unit('Nexus',None,400,0,-10,75,None)
-Assimilator = Unit('Assimilator',None,100,0,0,25,None)
-Pylon = Unit('Pylon',None,100,0,8,19,None)
-Gateway = Unit('Gateway',None,150,0,0,38,Pylon)
+Nexus = Unit('Nexus','Probe',400,0,-10,75,None)
+Assimilator = Unit('Assimilator','Probe',100,0,0,25,None)
+Pylon = Unit('Pylon','Probe',100,0,8,19,None)
+Gateway = Unit('Gateway','Probe',150,0,0,38,Pylon)
 
-Probe = Unit('Probe',Nexus,50,0,1,13,None)
-Zealot = Unit('Gateway',Gateway,100,0,2,25,None)
+Probe = Unit('Probe','Nexus',50,0,1,13,None)
+Zealot = Unit('Zealot','Gateway',100,0,2,25,None)
 ```
 
 Now let's add an `execute` function to schedule a set of tasks. This function takes a list of execution units, a list of tasks to complete, and a scheduler function to decide what to run.
@@ -122,7 +122,7 @@ def fifo(eus, tasks, time):
   task = tasks.pop()
 
   for eu in eus:
-    if not eu.running and (task.executed_on == None or eu.unit==task.executed_on):
+    if not eu.running and (task.executed_on == None or eu.unit.name==task.executed_on):
       eu.run(task, time)
       return
 
