@@ -87,34 +87,35 @@ class ExecutionUnit:
   
     return completed
 
-  def run(self, task, time):
+  def run(self, task, res, time):
     self.running = task
     self.idle_at = task.time + time
+
+    res[0] -= task.min
+    res[1] -= task.gas
+    if task.supply > 0: # Otherwise we adjust supply on completion
+      res[2] -= task.supply
+
+  def can_run(self, task, res):
+    if task.min > res[0] or task.gas > res[1] or task.supply > res[2]: return False
+  
+    return not self.running and (task.executed_on == None or self.unit.name==task.executed_on)
 ```
 
 FIFO (In-order execution)
 =========================
 
-One of the simplest scheduling algorithms that we can implement is a simply FIFO system:
+One of the simplest scheduling algorithms that we can implement is a simple FIFO system:
 
 ```python
 def fifo(eus, tasks, time, res):
-  """ Assign tasks to execution units in the order they were supplied."""
+  """
+  Assign tasks to execution units in the order they were supplied.
 
-  if not tasks: return
+  This is a noop.
+  """
 
-  if tasks[0].min > res[0] or tasks[0].gas > res[1] or tasks[0].supply > res[2]: return
-
-  task = tasks.pop(0)
-  for eu in eus:
-    if not eu.running and (task.executed_on == None or eu.unit.name==task.executed_on):
-      res[0] -= task.min
-      res[1] -= task.gas
-      if task.supply > 0: # Otherwise we adjust supply on completion
-        res[2] -= task.supply
-      eu.run(task, time)
-      return
-  tasks.insert(0, task)
+  return
 ```
 
 Now let's add an `execute` function to schedule a set of tasks. This function takes a list of execution units, a list of tasks to complete, and a scheduler function to decide what to run.
@@ -147,6 +148,14 @@ def execute(units, tasks, scheduler, debug=False):
         eus.append(ExecutionUnit(eu.complete()))
 
     scheduler(eus, tasks, time, res)
+
+    # Begin running the next task if possible
+    if tasks:
+      for eu in eus:
+        if eu.can_run(tasks[0], res):
+          eu.run(tasks[0], res, time)
+          tasks.pop(0)
+          break
 
     peons = len([t for t in eus if t.unit == Probe])
     bases = len([t for t in eus if t.unit == Nexus])
