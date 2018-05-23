@@ -16,21 +16,23 @@ from collections import namedtuple
 
 Unit = namedtuple('ExecutionUnit', ['name','executed_on','min','gas','supply','time','requires'])
 
-Nexus = Unit('Nexus','Probe',400,0,-10,75,None)
-Assimilator = Unit('Assimilator','Probe',100,0,0,25,None)
-Pylon = Unit('Pylon','Probe',100,0,-8,19,None)
-Gateway = Unit('Gateway','Probe',150,0,0,38,'Pylon')
-CyberneticsCore = Unit('Cybernetics Core','Probe',200,0,0,38,'Gateway')
-Observatory = Unit('Observatory','Probe',50,100,0,19,'Robotics Facility')
-RoboticsFacility = Unit('Robotics Facility','Probe',200,200,0,50,'Cybernetics Core')
-CitadelOfAdun = Unit('Citadel of Adun','Probe',150,100,0,38,'Cybernetics Core')
-TemplarArchives = Unit('TemplarArchives','Probe',150,200,0,38,'CitadelOfAdun')
+Nexus = Unit('Nexus','Probe',400,0,-10,75,[])
+Assimilator = Unit('Assimilator','Probe',100,0,0,25,[])
+Pylon = Unit('Pylon','Probe',100,0,-8,19,[])
+Gateway = Unit('Gateway','Probe',150,0,0,38,['Pylon'])
+CyberneticsCore = Unit('CyberneticsCore','Probe',200,0,0,38,['Gateway'])
+Observatory = Unit('Observatory','Probe',50,100,0,19,['RoboticsFacility'])
+RoboticsFacility = Unit('RoboticsFacility','Probe',200,200,0,50,['CyberneticsCore'])
+CitadelOfAdun = Unit('CitadelOfAdun','Probe',150,100,0,38,['CyberneticsCore'])
+TemplarArchives = Unit('TemplarArchives','Probe',150,200,0,38,['CitadelOfAdun'])
 
-Probe = Unit('Probe','Nexus',50,0,1,13,None)
-Zealot = Unit('Zealot','Gateway',100,0,2,25,'Gateway')
-Dragoon = Unit('Dragoon','Gateway',125,50,2,32,'Cybernetics Core')
-DarkTemplar = Unit('Dark Templar','Gateway',125,100,2,32,'Templar Archives')
-Observer = Unit('Observer','Robotics Facility',25,75,1,25,'Observatory')
+Probe = Unit('Probe','Nexus',50,0,1,13,[])
+Zealot = Unit('Zealot','Gateway',100,0,2,25,['Gateway'])
+Dragoon = Unit('Dragoon','Gateway',125,50,2,32,['CyberneticsCore'])
+DarkTemplar = Unit('DarkTemplar','Gateway',125,100,2,32,['TemplarArchives'])
+Observer = Unit('Observer','RoboticsFacility',25,75,1,25,['Observatory'])
+
+units = locals()
 ```
 
 We also need a little math to calculate income rate based on the current units and structures we possess:
@@ -84,6 +86,18 @@ def mining_rate(bases, assimilators, workers):
 We'll create a class to wrap our execution units in to track what they are running and how long it will take to finish the work:
 
 ```python
+def in_production(eus, unit):
+  return [e for e in eus if e.running and e.running==unit]
+
+def finished(eus, unit):
+  return [e for e in eus if e.unit==unit]
+
+def queued(tasks, unit):
+  return [t for t in tasks if t==unit]
+
+def owned(eus, tasks, unit):
+  return finished(eus,unit) or queued(tasks,unit) or in_production(eus, unit)
+
 class ExecutionUnit:
   def __init__(self, unit):
     self.unit = unit
@@ -106,15 +120,18 @@ class ExecutionUnit:
     if task.supply > 0: # Otherwise we adjust supply on completion
       res[2] -= task.supply
 
-  def can_run(self, task, res):
+  def can_run(self, eus, task, res):
     if task.min > res[0] or task.gas > res[1] or task.supply > res[2]: return False
+
+    for r in task.requires:
+      if not finished(eus, units[r]): return False
   
     return not self.running and (task.executed_on == None or self.unit.name==task.executed_on)
 ```
 
 Now let's add an `execute` function to schedule a set of tasks. This function takes a list of execution units, a list of tasks to complete, and a scheduler function to decide what to run.
 
-```python  
+```python
 def execute(tasks, scheduler, units=[Nexus] + [Probe] * 4, debug=False):
   """
   Executes a set of tasks using a supplied scheduler
@@ -122,7 +139,7 @@ def execute(tasks, scheduler, units=[Nexus] + [Probe] * 4, debug=False):
   >>> execute([Probe], lambda *x: None)
   13
   >>> execute([Probe] * 4 + [Pylon, Gateway, Zealot], lambda *x: None)
-  126
+  127
   >>> execute([Probe] * 4 + [Pylon, Gateway, Zealot, Nexus, Zealot], lambda *x: None)
   196
   """
@@ -149,7 +166,7 @@ def execute(tasks, scheduler, units=[Nexus] + [Probe] * 4, debug=False):
     # Begin running the next task if possible
     if tasks:
       for eu in eus:
-        if eu.can_run(tasks[0], res):
+        if eu.can_run(eus,tasks[0], res):
           message("Started %s" % tasks[0].name)
           eu.run(tasks[0], res, time)
           tasks.pop(0)
@@ -207,14 +224,14 @@ def reorder(eus, tasks, time, res):
 
   for (i, task) in enumerate(tasks):
     for eu in eus:
-      if eu.can_run(task, res):
+      if eu.can_run(eus,task, res):
         tasks.insert(0, tasks.pop(i))
         return
 
 execute(TASKS[:], reorder, debug=True)
 ```
 
-We were able to remove 13s of stalling on this simple task by simply using reordering.
+We were able to remove 23s of stalling on this simple task by simply using reordering.
 
 Reordering with automated minerals
 ==================================
@@ -234,7 +251,7 @@ def reorder_automin(eus, tasks, time, res):
   reorder(eus, tasks, time, res)
 
   for eu in eus:
-    if eu.can_run(Probe, res):
+    if eu.can_run(eus,Probe, res):
       tasks.insert(0, Probe)
       return True
 
@@ -249,12 +266,6 @@ Brood War has a secondary resource called Vespene Gas (typically just gas) that 
 We will update our scheduler to build a gas mining facility (Assimilator) once it is blocked by a unit that requires gas and has none.
 
 ```python
-def in_production(eus, unit):
-  return [e for e in eus if e.running and e.running==unit]
-
-def owned(eus, tasks, unit):
-  return [e for e in eus if e.unit==unit] or [t for t in tasks if t==unit] or in_production(eus, unit)
-
 def reorder_autogas(eus, tasks, time, res):
   """
   Reorders upcoming tasks if the next task is not runnable. This implements the first step of a selection sort to move the first task that can be run to the front of the task queue.
@@ -269,7 +280,7 @@ def reorder_autogas(eus, tasks, time, res):
 
   if tasks[0].gas > 0 and not owned(eus, tasks, Assimilator):
     for eu in eus:
-      if eu.can_run(Assimilator, res):
+      if eu.can_run(eus,Assimilator, res):
         tasks.insert(0, Assimilator)
         return True
 
@@ -301,7 +312,7 @@ def autosupply(eus, tasks, time, res):
 
   if tasks[0].supply > res[2] and not in_production(eus, Pylon):
     for eu in eus:
-      if eu.can_run(Pylon, res):
+      if eu.can_run(eus,Pylon, res):
         tasks.insert(0, Pylon)
         return True
 
