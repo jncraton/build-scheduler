@@ -22,7 +22,7 @@ Pylon = Unit('Pylon','Probe',100,0,-8,19,None)
 Gateway = Unit('Gateway','Probe',150,0,0,38,'Pylon')
 
 Probe = Unit('Probe','Nexus',50,0,1,13,None)
-Zealot = Unit('Zealot','Gateway',100,0,2,25,None)
+Zealot = Unit('Zealot','Gateway',100,0,2,25,'Gateway')
 ```
 
 We also need a little math to calculate income rate based on the current units and structures we possess:
@@ -233,7 +233,7 @@ for task in TASKS:
 
 for n1 in DAG.nodes:
   for n2 in DAG.nodes:
-    if n2.task.executed_on == n1.task.name:
+    if n2.task.requires == n1.task.name:
       DAG.add_edge(n1,n2)
   
 import seaborn
@@ -242,10 +242,10 @@ seaborn.set()
 nx.draw(DAG, with_labels=True)
 ```
 
-Next, we need to process our DAG into a list that is sorted topologically. [6]
+Topological Sorting and Kahn's Algorithm
+----------------------------------------
 
-Kahn's Algorithm
-----------------
+Next, we need to process our DAG into a list that is sorted topologically. [6]
 
 We'll simply apply Kahn's algorithm to do the sorting[10]. Here's the psuedocode from Wikipedia [6]:
 
@@ -269,6 +269,15 @@ Now we simply sort our DAG topologically:
 [str(n) for n in nx.topological_sort(DAG)]
 ```
 
+Critical Path
+-------------
+
+Our scheduling system up to this point does not include any advanced planning and simply tries to grab the first available piece of work. What we would like to do is find the critical path[13] through our DAG and begin working on it first. Generally, we need to solve the longest path problem[14] for our DAG.
+
+```python
+[str(n) for n in nx.dag_longest_path(DAG)]
+```
+
 References
 ==========
 
@@ -284,3 +293,5 @@ References
 10. Kahn, Arthur B. (1962), "Topological sorting of large networks", Communications of the ACM, 5 (11): 558–562, doi:10.1145/368996.369025.
 11. http://www.cs.mun.ca/~dchurchill/pdf/aiide11-bo.pdf
 12. http://richoux.fr/publications/ecgg15_chapter-rts_ai.pdf
+13. https://en.wikipedia.org/wiki/Critical_path_method
+14. https://en.wikipedia.org/wiki/Longest_path_problem
