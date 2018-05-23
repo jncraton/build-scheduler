@@ -149,7 +149,7 @@ def execute(tasks, scheduler, units=[Nexus] + [Probe] * 4, debug=False):
           tasks.pop(0)
           break
 
-    if not [t for t in tasks if t != Probe] and not [idle for idle in eus if idle.running!=None]: break
+    if not [t for t in tasks if t not in [Probe,Pylon]] and not [idle for idle in eus if idle.running!=None]: break
 
     peons = len([t for t in eus if t.unit == Probe])
     bases = len([t for t in eus if t.unit == Nexus])
@@ -210,8 +210,8 @@ execute(TASKS[:], reorder, debug=True)
 
 We were able to remove 13s of stalling on this simple task by simply using reordering.
 
-Reordering with automated economy
-=================================
+Reordering with automated minerals
+==================================
 
 In RTS games, a certain economic size (worker count, base count, etc) is typically a means to an end rather than a goal in itself. For this reason, I have created a scheduler that expects to not be told when to build workers or bases and instead automatically injects these as needed.
 
@@ -230,7 +230,7 @@ def reorder_automin(eus, tasks, time, res):
   for eu in eus:
     if eu.can_run(Probe, res):
       tasks.insert(0, Probe)
-      return
+      return True
 
 execute([Pylon, Gateway, Zealot, Zealot], reorder_automin, debug=True)
 ```
@@ -250,19 +250,53 @@ def reorder_autogas(eus, tasks, time, res):
   The algorithm used here is to simply put the first runnable task as the start of the task queue or do nothing
   """
 
-  reorder(eus, tasks, time, res)
-  reorder_automin(eus, tasks, time, res)
-
   if not tasks: return
 
-  if tasks[0].gas > 0 and not [e for e in eus if e.unit.name=='Assimilator']:
-    tasks.insert(0, Assimilator)
-    return
+  reorder(eus, tasks, time, res)
+  if reorder_automin(eus, tasks, time, res): return
+
+  if tasks[0].gas > 0 and not [e for e in eus if e.unit.name=='Assimilator'] and not [e for e in eus if e.running and e.running.name=='Assimilator'] and not [t for t in tasks if t.name=='Assimilator']:
+    for eu in eus:
+      if eu.can_run(Assimilator, res):
+        tasks.insert(0, Assimilator)
+        return True
 
 execute([Pylon, Gateway, Zealot, Zealot, Pylon, CyberneticsCore, Dragoon], reorder_autogas, debug=True)
 ```
 
-This simlifies the list of tasks that we need to supply, and also creates the opportunity for better economic management in the future.
+This handles ensuring that we don't get blocked on units that require gas, but it is a very weak planning method.
+
+
+Supply management
+=================
+
+Each unit created in Brood War borrows a fixed amount of "supply" from the players total supply. Supply is created by creating Pylons. We can automatically manage supply in the same way as we just did for gas.
+
+```python
+def autosupply(eus, tasks, time, res):
+  """
+  Reorders upcoming tasks if the next task is not runnable. This implements the first step of a selection sort to move the first task that can be run to the front of the task queue.
+
+  The algorithm used here is to simply put the first runnable task as the start of the task queue or do nothing
+  """
+
+  if not tasks: return
+
+  reorder(eus, tasks, time, res)
+
+  if reorder_autogas(eus, tasks, time, res):
+    return True
+
+  if tasks[0].supply > 0 and res[2] == 0:
+    for eu in eus:
+      if eu.can_run(Pylon, res):
+        tasks.insert(0, Pylon)
+        return True
+
+execute([Gateway, Zealot, Zealot, CyberneticsCore, Dragoon], autosupply, debug=True)
+```
+
+Now we should never be supply blocked. We can also see that this algorithm completes the requested tasks in the same amount of time as the above, but has a stronger economic position.
 
 Directed Acyclic Graph
 ======================
