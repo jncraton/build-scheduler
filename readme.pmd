@@ -403,7 +403,7 @@ Here's the result of applying this to our DAG:
 [str(n) for n in nx.dag_longest_path(get_dag(tasks))]
 ```
 
-Let's not build a scheduler that uses the critical path to decide what to run next.
+Let's now build a scheduler that uses the critical path to decide what to run next.
 
 ```python
 def critical_path(eus, tasks, time, res):
