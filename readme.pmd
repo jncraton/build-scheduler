@@ -361,7 +361,7 @@ for n1 in DAG.nodes:
   for n2 in DAG.nodes:
     for r in n2.task.requires:
       if r == n1.task.name:
-        DAG.add_edge(n1,n2)
+        DAG.add_edge(n1,n2,weight=n2.task.time)
   
 import seaborn
 seaborn.set()
