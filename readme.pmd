@@ -16,21 +16,21 @@ from collections import namedtuple
 
 Unit = namedtuple('ExecutionUnit', ['name','executed_on','min','gas','supply','time','requires'])
 
-Nexus = Unit('Nexus','Probe',400,0,-10,75,[])
-Assimilator = Unit('Assimilator','Probe',100,0,0,25,[])
-Pylon = Unit('Pylon','Probe',100,0,-8,19,[])
-Gateway = Unit('Gateway','Probe',150,0,0,38,['Pylon'])
-CyberneticsCore = Unit('CyberneticsCore','Probe',200,0,0,38,['Gateway'])
-Observatory = Unit('Observatory','Probe',50,100,0,19,['RoboticsFacility'])
-RoboticsFacility = Unit('RoboticsFacility','Probe',200,200,0,50,['CyberneticsCore'])
-CitadelOfAdun = Unit('CitadelOfAdun','Probe',150,100,0,38,['CyberneticsCore'])
-TemplarArchives = Unit('TemplarArchives','Probe',150,200,0,38,['CitadelOfAdun'])
+Nexus = Unit('Nexus','Probe',400,0,-10,75,tuple())
+Assimilator = Unit('Assimilator','Probe',100,0,0,25,tuple())
+Pylon = Unit('Pylon','Probe',100,0,-8,19,tuple())
+Gateway = Unit('Gateway','Probe',150,0,0,38,('Pylon',))
+CyberneticsCore = Unit('CyberneticsCore','Probe',200,0,0,38,('Gateway',))
+Observatory = Unit('Observatory','Probe',50,100,0,19,('RoboticsFacility',))
+RoboticsFacility = Unit('RoboticsFacility','Probe',200,200,0,50,('CyberneticsCore',))
+CitadelOfAdun = Unit('CitadelOfAdun','Probe',150,100,0,38,('CyberneticsCore',))
+TemplarArchives = Unit('TemplarArchives','Probe',150,200,0,38,('CitadelOfAdun',))
 
-Probe = Unit('Probe','Nexus',50,0,1,13,[])
-Zealot = Unit('Zealot','Gateway',100,0,2,25,['Gateway'])
-Dragoon = Unit('Dragoon','Gateway',125,50,2,32,['CyberneticsCore'])
-DarkTemplar = Unit('DarkTemplar','Gateway',125,100,2,32,['TemplarArchives'])
-Observer = Unit('Observer','RoboticsFacility',25,75,1,25,['Observatory'])
+Probe = Unit('Probe','Nexus',50,0,1,13,tuple())
+Zealot = Unit('Zealot','Gateway',100,0,2,25,('Gateway',))
+Dragoon = Unit('Dragoon','Gateway',125,50,2,32,('CyberneticsCore',))
+DarkTemplar = Unit('DarkTemplar','Gateway',125,100,2,32,('TemplarArchives',))
+Observer = Unit('Observer','RoboticsFacility',25,75,1,25,('Observatory',))
 
 units = locals()
 ```
@@ -337,7 +337,7 @@ class Node:
 def get_dag(tasks):
   dag = nx.DiGraph()
 
-  for task in tasks:
+  for task in set(tasks):
     dag.add_node(Node(task))
   
   for n1 in dag.nodes:
