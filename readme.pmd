@@ -307,16 +307,16 @@ def autosupply(eus, tasks, time, res):
 
   reorder(eus, tasks, time, res)
 
-  if reorder_autogas(eus, tasks, time, res):
-    return True
-
   if tasks[0].supply > res[2] and not in_production(eus, Pylon):
     for eu in eus:
-      if eu.can_run(eus,Pylon, res):
+      if eu.can_run(eus, Pylon, res):
         tasks.insert(0, Pylon)
         return True
 
-execute([Gateway, Zealot, Zealot, CyberneticsCore, Dragoon], autosupply, debug=True)
+  if reorder_autogas(eus, tasks, time, res):
+    return True
+
+execute([Pylon, Gateway, Zealot, Zealot, CyberneticsCore, Dragoon], autosupply, debug=True)
 ```
 
 Now we should never be supply blocked. We can also see that this algorithm completes the requested tasks in the same amount of time as the above, but has a stronger economic position.
@@ -334,7 +334,12 @@ We'll handle dependencies here in some depth and then explore exponential benefi
 Let's consider a more complex production problem that includes multiple branches and explore how to optimize it. Let's try to build an Observer and a Dark Templar as quickly as possible.
 
 ```python
-execute([Gateway, CyberneticsCore, RoboticsFacility, Observatory, Observer, CitadelOfAdun, TemplarArchives, DarkTemplar], autosupply, debug=True)
+tasks = [Pylon, Gateway, CyberneticsCore, 
+         RoboticsFacility, Observatory, Observer, 
+         CitadelOfAdun, TemplarArchives, DarkTemplar
+        ]
+
+execute(tasks, autosupply, debug=True)
 ```
 
 ```python
@@ -349,7 +354,7 @@ class Node:
   def __str__(self):
     return self.task.name
 
-for task in TASKS:
+for task in tasks:
   DAG.add_node(Node(task))
 
 for n1 in DAG.nodes:
