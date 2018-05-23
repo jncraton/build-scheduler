@@ -420,6 +420,13 @@ def critical_path(eus, tasks, time, res):
 execute(tasks[:], critical_path, debug=True)
 ```
 
+Note that the scheduler must recalculate the critical path on each run as the first element of the critical path may sometimes not be the second element from the previous run. This is due to the fact that there may be multiple paralell that need to be executed as such to optimize time efficiency.
+
+Complexity and Correctness
+--------------------------
+
+This scheduler ends up with O(n²) complexity with the number of steps in the build. It requires linear time to determine the critcal path, but this path must be calculated again for every step, so we end up with O(n²) time.
+
 References
 ==========
 
