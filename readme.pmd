@@ -147,7 +147,7 @@ def execute(tasks, scheduler, units=[Nexus] + [Probe] * 4, debug=False):
           tasks.pop(0)
           break
 
-    if not tasks and not [idle for idle in eus if idle.running!=None]: return time
+    if not tasks and not [idle for idle in eus if idle.running!=None]: break
 
     peons = len([t for t in eus if t.unit == Probe])
     bases = len([t for t in eus if t.unit == Nexus])
@@ -156,7 +156,10 @@ def execute(tasks, scheduler, units=[Nexus] + [Probe] * 4, debug=False):
     res[0] += mining_rate(bases, gases, peons)[0]
     res[1] += mining_rate(bases, gases, peons)[1]
 
-  return time
+  if debug:
+    print("Total makespan: %ds" % time)
+  else:
+    return time
 ```
 
 FIFO (In-order execution)
