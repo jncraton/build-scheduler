@@ -206,6 +206,33 @@ execute(INITIAL[:], TASKS[:], reorder, debug=True)
 
 We were able to remove 13s of stalling on this simple task by simply using reordering.
 
+Reordering with automated economy
+=================================
+
+In RTS games, a certain economic size (worker count, base count, etc) is typically a means to an end rather than a goal in itself. For this reason, I have created a scheduler that expects to not be told when to build workers or bases and instead automatically injects these as needed.
+
+For this simple implementation, the scheduler simply builds a worker if it is able to do so and commands fewer than 30 of them.
+
+```python
+def reorder_autoecon(eus, tasks, time, res):
+  """
+  Reorders upcoming tasks if the next task is not runnable. This implements the first step of a selection sort to move the first task that can be run to the front of the task queue.
+
+  The algorithm used here is to simply put the first runnable task as the start of the task queue or do nothing
+  """
+
+  reorder(eus, tasks, time, res)
+
+  for eu in eus:
+    if eu.can_run(Probe, res):
+      tasks.insert(0, Probe)
+      return
+
+execute(INITIAL[:], [Pylon, Gateway, Zealot, Zealot], reorder_autoecon, debug=True)
+```
+
+This simlifies the list of tasks that we need to supply, and also creates the opportunity for better economic management in the future.
+
 Directed Acyclic Graph
 ======================
 
