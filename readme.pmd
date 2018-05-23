@@ -242,12 +242,6 @@ For this simple implementation, the scheduler simply builds a worker if it is ab
 
 ```python
 def reorder_automin(eus, tasks, time, res):
-  """
-  Reorders upcoming tasks if the next task is not runnable. This implements the first step of a selection sort to move the first task that can be run to the front of the task queue.
-
-  The algorithm used here is to simply put the first runnable task as the start of the task queue or do nothing
-  """
-
   reorder(eus, tasks, time, res)
 
   for eu in eus:
@@ -267,12 +261,6 @@ We will update our scheduler to build a gas mining facility (Assimilator) once i
 
 ```python
 def reorder_autogas(eus, tasks, time, res):
-  """
-  Reorders upcoming tasks if the next task is not runnable. This implements the first step of a selection sort to move the first task that can be run to the front of the task queue.
-
-  The algorithm used here is to simply put the first runnable task as the start of the task queue or do nothing
-  """
-
   if not tasks: return
 
   reorder(eus, tasks, time, res)
@@ -297,12 +285,6 @@ Each unit created in Brood War borrows a fixed amount of "supply" from the playe
 
 ```python
 def autosupply(eus, tasks, time, res):
-  """
-  Reorders upcoming tasks if the next task is not runnable. This implements the first step of a selection sort to move the first task that can be run to the front of the task queue.
-
-  The algorithm used here is to simply put the first runnable task as the start of the task queue or do nothing
-  """
-
   if not tasks: return
 
   reorder(eus, tasks, time, res)
@@ -345,8 +327,6 @@ execute(tasks[:], autosupply, debug=True)
 ```python
 import networkx as nx
 
-DAG = nx.DiGraph()
-
 class Node:
   def __init__(self, task):
     self.task = task
@@ -354,19 +334,21 @@ class Node:
   def __str__(self):
     return self.task.name
 
-for task in tasks:
-  DAG.add_node(Node(task))
+def get_dag(tasks):
+  dag = nx.DiGraph()
 
-for n1 in DAG.nodes:
-  for n2 in DAG.nodes:
-    for r in n2.task.requires:
-      if r == n1.task.name:
-        DAG.add_edge(n1,n2,weight=n2.task.time)
+  for task in tasks:
+    dag.add_node(Node(task))
   
-import seaborn
-seaborn.set()
+  for n1 in dag.nodes:
+    for n2 in dag.nodes:
+      for r in n2.task.requires:
+        if r == n1.task.name:
+          dag.add_edge(n1,n2,weight=n2.task.time)
 
-nx.draw(DAG, with_labels=True)
+  return dag
+
+nx.draw(get_dag(tasks), with_labels=True)
 ```
 
 Topological Sorting and Kahn's Algorithm
@@ -393,7 +375,7 @@ We'll simply apply Kahn's algorithm to do the sorting[10]. Here's the psuedocode
 Now we simply sort our DAG topologically:
 
 ```python3
-[str(n) for n in nx.topological_sort(DAG)]
+[str(n) for n in nx.topological_sort(get_dag(tasks))]
 ```
 
 Critical Path
@@ -401,8 +383,33 @@ Critical Path
 
 Our scheduling system up to this point does not include any advanced planning and simply tries to grab the first available piece of work. What we would like to do is find the critical path[13] through our DAG and begin working on it first. Generally, we need to solve the longest path problem[14] for our DAG.
 
+> The critical path method for scheduling a set of activities involves the construction of a directed acyclic graph in which the vertices represent project milestones and the edges represent activities that must be performed after one milestone and before another; each edge is weighted by an estimate of the amount of time the corresponding activity will take to complete. In such a graph, the longest path from the first milestone to the last one is the critical path, which describes the total time for completing the project. [14]
+
+The longest path problem for a general graph is NP-hard, but the variant needed to DAGs is not particularly interesting and linear time. Here's the basic idea:
+
+> 1. Find a topological ordering of the given DAG.
+> 2. For each vertex v of the DAG, in the topological ordering, compute the length of the longest path ending at v by looking at its incoming neighbors and adding one to the maximum length recorded for those neighbors. If v has no incoming neighbors, set the length of the longest path ending at v to zero. In either case, record this number so that later steps of the algorithm can access it.
+> 3. Once this has been done, the longest path in the whole DAG may be obtained by starting at the vertex v with the largest recorded value, then repeatedly stepping backwards to its incoming neighbor with the largest recorded value, and reversing the sequence of vertices found in this way. [14]
+
+Here's the result of applying this to our DAG:
+
 ```python
-[str(n) for n in nx.dag_longest_path(DAG)]
+[str(n) for n in nx.dag_longest_path(get_dag(tasks))]
+```
+
+Let's not build a scheduler that uses the critical path to decide what to run next.
+
+```python
+def critical_path(eus, tasks, time, res):
+  if not tasks: return
+
+  new_start = nx.dag_longest_path(get_dag(tasks))[0]
+  tasks.remove(new_start.task)
+  tasks.insert(0, new_start.task)
+
+  autosupply(eus, tasks, time, res)
+
+execute(tasks[:], critical_path, debug=True)
 ```
 
 References
