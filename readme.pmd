@@ -21,10 +21,16 @@ Assimilator = Unit('Assimilator','Probe',100,0,0,25,None)
 Pylon = Unit('Pylon','Probe',100,0,-8,19,None)
 Gateway = Unit('Gateway','Probe',150,0,0,38,'Pylon')
 CyberneticsCore = Unit('Cybernetics Core','Probe',200,0,0,38,'Gateway')
+Observatory = Unit('Observatory','Probe',50,100,0,19,'Robotics Facility')
+RoboticsFacility = Unit('Robotics Facility','Probe',200,200,0,50,'Cybernetics Core')
+CitadelOfAdun = Unit('Citadel of Adun','Probe',150,100,0,38,'Cybernetics Core')
+TemplarArchives = Unit('TemplarArchives','Probe',150,200,0,38,'CitadelOfAdun')
 
 Probe = Unit('Probe','Nexus',50,0,1,13,None)
 Zealot = Unit('Zealot','Gateway',100,0,2,25,'Gateway')
 Dragoon = Unit('Dragoon','Gateway',125,50,2,32,'Cybernetics Core')
+DarkTemplar = Unit('Dark Templar','Gateway',125,100,2,32,'Templar Archives')
+Observer = Unit('Observer','Robotics Facility',25,75,1,25,'Observatory')
 ```
 
 We also need a little math to calculate income rate based on the current units and structures we possess:
@@ -307,6 +313,12 @@ This is where the more challenging algorithms begin. There are two factors that 
 2. Exponential benefit
 
 We'll handle dependencies here in some depth and then explore exponential benefit. The first step to handling dependencies in a sensible way is to convert our operations into a directed acyclic graphs (DAG).
+
+Let's consider a more complex production problem that includes multiple branches and explore how to optimize it. Let's try to build an Observer and a Dark Templar as quickly as possible.
+
+```python
+execute([Gateway, CyberneticsCore, RoboticsFacility, Observatory, Observer, CitadelOfAdun, TemplarArchives, DarkTemplar], autosupply, debug=True)
+```
 
 ```python
 import networkx as nx
