@@ -281,7 +281,6 @@ execute([Pylon, Gateway, Zealot, Zealot, Pylon, CyberneticsCore, Dragoon], reord
 
 This handles ensuring that we don't get blocked on units that require gas, but it is a very weak planning method.
 
-
 Supply management
 =================
 
@@ -312,13 +311,6 @@ Now we should never be supply blocked. We can also see that this algorithm compl
 Directed Acyclic Graph
 ======================
 
-This is where the more challenging algorithms begin. There are two factors that make this scheduling task complex:
-
-1. Dependencies
-2. Exponential benefit
-
-We'll handle dependencies here in some depth and then explore exponential benefit. The first step to handling dependencies in a sensible way is to convert our operations into a directed acyclic graphs (DAG).
-
 Let's consider a more complex production problem that includes multiple branches and explore how to optimize it. Let's try to build an Observer and a Dark Templar as quickly as possible.
 
 ```python
@@ -329,6 +321,8 @@ tasks = [Pylon, Gateway, CyberneticsCore,
 
 execute(tasks[:], reorder_autosupply, debug=True)
 ```
+
+We need to add better planning to handle complicated dependencies. The first step to handling dependencies in a sensible way is to convert our operations into a directed acyclic graphs (DAG).
 
 ```python
 import networkx as nx
