@@ -249,6 +249,12 @@ Brood War has a secondary resource called Vespene Gas (typically just gas) that 
 We will update our scheduler to build a gas mining facility (Assimilator) once it is blocked by a unit that requires gas and has none.
 
 ```python
+def in_production(eus, unit):
+  return [e for e in eus if e.running and e.running==unit]
+
+def owned(eus, tasks, unit):
+  return [e for e in eus if e.unit==unit] or [t for t in tasks if t==unit] or in_production(eus, unit)
+
 def reorder_autogas(eus, tasks, time, res):
   """
   Reorders upcoming tasks if the next task is not runnable. This implements the first step of a selection sort to move the first task that can be run to the front of the task queue.
@@ -261,7 +267,7 @@ def reorder_autogas(eus, tasks, time, res):
   reorder(eus, tasks, time, res)
   if reorder_automin(eus, tasks, time, res): return
 
-  if tasks[0].gas > 0 and not [e for e in eus if e.unit.name=='Assimilator'] and not [e for e in eus if e.running and e.running.name=='Assimilator'] and not [t for t in tasks if t.name=='Assimilator']:
+  if tasks[0].gas > 0 and not owned(eus, tasks, Assimilator):
     for eu in eus:
       if eu.can_run(Assimilator, res):
         tasks.insert(0, Assimilator)
@@ -293,7 +299,7 @@ def autosupply(eus, tasks, time, res):
   if reorder_autogas(eus, tasks, time, res):
     return True
 
-  if tasks[0].supply > 0 and res[2] == 0:
+  if tasks[0].supply > res[2] and not in_production(eus, Pylon):
     for eu in eus:
       if eu.can_run(Pylon, res):
         tasks.insert(0, Pylon)
