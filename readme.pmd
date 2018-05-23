@@ -241,13 +241,15 @@ In RTS games, a certain economic size (worker count, base count, etc) is typical
 For this simple implementation, the scheduler simply builds a worker if it is able to do so and commands fewer than 30 of them.
 
 ```python
-def reorder_automin(eus, tasks, time, res):
-  reorder(eus, tasks, time, res)
-
+def automin(eus, tasks, time, res):
   for eu in eus:
     if eu.can_run(eus,Probe, res):
       tasks.insert(0, Probe)
       return True
+
+def reorder_automin(eus, tasks, time, res):
+  reorder(eus, tasks, time, res)
+  automin(eus, tasks, time, res)
 
 execute([Pylon, Gateway, Zealot, Zealot], reorder_automin, debug=True)
 ```
@@ -260,17 +262,19 @@ Brood War has a secondary resource called Vespene Gas (typically just gas) that 
 We will update our scheduler to build a gas mining facility (Assimilator) once it is blocked by a unit that requires gas and has none.
 
 ```python
-def reorder_autogas(eus, tasks, time, res):
+def autogas(eus, tasks, time, res):
   if not tasks: return
-
-  reorder(eus, tasks, time, res)
-  if reorder_automin(eus, tasks, time, res): return
-
+  
   if tasks[0].gas > 0 and not owned(eus, tasks, Assimilator):
     for eu in eus:
       if eu.can_run(eus,Assimilator, res):
         tasks.insert(0, Assimilator)
         return True
+
+def reorder_autogas(eus, tasks, time, res):
+  reorder(eus, tasks, time, res)
+  if autogas(eus, tasks, time, res): return
+  if automin(eus, tasks, time, res): return
 
 execute([Pylon, Gateway, Zealot, Zealot, Pylon, CyberneticsCore, Dragoon], reorder_autogas, debug=True)
 ```
@@ -287,18 +291,20 @@ Each unit created in Brood War borrows a fixed amount of "supply" from the playe
 def autosupply(eus, tasks, time, res):
   if not tasks: return
 
-  reorder(eus, tasks, time, res)
-
   if tasks[0].supply > res[2] and not in_production(eus, Pylon):
     for eu in eus:
       if eu.can_run(eus, Pylon, res):
         tasks.insert(0, Pylon)
         return True
 
+def reorder_autosupply(eus, tasks, time, res):
+  reorder(eus, tasks, time, res)
+  autosupply(eus, tasks, time, res)
+  
   if reorder_autogas(eus, tasks, time, res):
     return True
 
-execute([Pylon, Gateway, Zealot, Zealot, CyberneticsCore, Dragoon], autosupply, debug=True)
+execute([Pylon, Gateway, Zealot, Zealot, CyberneticsCore, Dragoon], reorder_autosupply, debug=True)
 ```
 
 Now we should never be supply blocked. We can also see that this algorithm completes the requested tasks in the same amount of time as the above, but has a stronger economic position.
@@ -321,7 +327,7 @@ tasks = [Pylon, Gateway, CyberneticsCore,
          CitadelOfAdun, TemplarArchives, DarkTemplar
         ]
 
-execute(tasks[:], autosupply, debug=True)
+execute(tasks[:], reorder_autosupply, debug=True)
 ```
 
 ```python
@@ -407,7 +413,9 @@ def critical_path(eus, tasks, time, res):
   tasks.remove(new_start.task)
   tasks.insert(0, new_start.task)
 
-  autosupply(eus, tasks, time, res)
+  if autosupply(eus, tasks, time, res): return
+  if automin(eus, tasks, time, res): return
+  if autogas(eus, tasks, time, res): return
 
 execute(tasks[:], critical_path, debug=True)
 ```
