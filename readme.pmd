@@ -427,6 +427,31 @@ Complexity and Correctness
 
 This scheduler ends up with O(n²) complexity with the number of steps in the build. It requires linear time to determine the critcal path, but this path must be calculated again for every step, so we end up with O(n²) time.
 
+This algorithm is obvious correct in that it completes the task at hand, but it is still not optimal.
+
+Investment
+==========
+
+The next thing that we need to add to our scheduler is the concept of investment. Consider the following task:
+
+```python
+zealots = [Pylon,Gateway] + [Zealot]*12
+execute(zealots[:], critical_path, debug=True)
+```
+
+And the simple DAG:
+
+```python
+nx.draw(get_dag(zealots), with_labels=True)
+```
+
+This algorithm misses a key issue. While the gateway allows zealots to be built, it also creates a bottleneck. Right now, zealots are built individually over a long period of time. In Brood War, we have the option to invest in any number of gateways, so let's update our algorithm to handle explore that possibility.
+
+Hotspot removal
+===============
+
+There are several ways to attempt this. The first I'll try to implement is the detection and removal of hotspots in 
+
 References
 ==========
 
