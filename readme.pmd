@@ -107,15 +107,15 @@ class ExecutionUnit:
 Now let's add an `execute` function to schedule a set of tasks. This function takes a list of execution units, a list of tasks to complete, and a scheduler function to decide what to run.
 
 ```python  
-def execute(units, tasks, scheduler, debug=False):
+def execute(tasks, scheduler, units=[Nexus] + [Probe] * 4, debug=False):
   """
   Executes a set of tasks using a supplied scheduler
   
-  >>> execute([Nexus] + [Probe] * 4, [Probe], lambda *x: None)
+  >>> execute([Probe], lambda *x: None)
   13
-  >>> execute([Nexus] + [Probe] * 4, [Probe] * 4 + [Pylon, Gateway, Zealot], lambda *x: None)
+  >>> execute([Probe] * 4 + [Pylon, Gateway, Zealot], lambda *x: None)
   126
-  >>> execute([Nexus] + [Probe] * 4, [Probe] * 4 + [Pylon, Gateway, Zealot, Nexus, Zealot], lambda *x: None)
+  >>> execute([Probe] * 4 + [Pylon, Gateway, Zealot, Nexus, Zealot], lambda *x: None)
   196
   """
 
@@ -174,10 +174,9 @@ def fifo(eus, tasks, time, res):
 
   return
 
-INITIAL = [Nexus] + [Probe] * 4
 TASKS = [Probe] * 4 + [Pylon] + [Probe] * 4 + [Gateway, Zealot, Zealot]
 
-execute(INITIAL[:], TASKS[:], fifo, debug=True)
+execute(TASKS[:], fifo, debug=True)
 ```
 
 Reordering (out-of-order execution)
@@ -201,7 +200,7 @@ def reorder(eus, tasks, time, res):
         tasks.insert(0, tasks.pop(i))
         return
 
-execute(INITIAL[:], TASKS[:], reorder, debug=True)
+execute(TASKS[:], reorder, debug=True)
 ```
 
 We were able to remove 13s of stalling on this simple task by simply using reordering.
@@ -228,7 +227,7 @@ def reorder_autoecon(eus, tasks, time, res):
       tasks.insert(0, Probe)
       return
 
-execute(INITIAL[:], [Pylon, Gateway, Zealot, Zealot], reorder_autoecon, debug=True)
+execute([Pylon, Gateway, Zealot, Zealot], reorder_autoecon, debug=True)
 ```
 
 This simlifies the list of tasks that we need to supply, and also creates the opportunity for better economic management in the future.
