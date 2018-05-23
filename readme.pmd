@@ -20,9 +20,11 @@ Nexus = Unit('Nexus','Probe',400,0,-10,75,None)
 Assimilator = Unit('Assimilator','Probe',100,0,0,25,None)
 Pylon = Unit('Pylon','Probe',100,0,-8,19,None)
 Gateway = Unit('Gateway','Probe',150,0,0,38,'Pylon')
+CyberneticsCore = Unit('Cybernetics Core','Probe',200,0,0,38,'Gateway')
 
 Probe = Unit('Probe','Nexus',50,0,1,13,None)
 Zealot = Unit('Zealot','Gateway',100,0,2,25,'Gateway')
+Dragoon = Unit('Dragoon','Gateway',125,50,2,32,'Cybernetics Core')
 ```
 
 We also need a little math to calculate income rate based on the current units and structures we possess:
@@ -147,7 +149,7 @@ def execute(tasks, scheduler, units=[Nexus] + [Probe] * 4, debug=False):
           tasks.pop(0)
           break
 
-    if not tasks and not [idle for idle in eus if idle.running!=None]: break
+    if not [t for t in tasks if t != Probe] and not [idle for idle in eus if idle.running!=None]: break
 
     peons = len([t for t in eus if t.unit == Probe])
     bases = len([t for t in eus if t.unit == Nexus])
@@ -216,7 +218,7 @@ In RTS games, a certain economic size (worker count, base count, etc) is typical
 For this simple implementation, the scheduler simply builds a worker if it is able to do so and commands fewer than 30 of them.
 
 ```python
-def reorder_autoecon(eus, tasks, time, res):
+def reorder_automin(eus, tasks, time, res):
   """
   Reorders upcoming tasks if the next task is not runnable. This implements the first step of a selection sort to move the first task that can be run to the front of the task queue.
 
@@ -230,7 +232,34 @@ def reorder_autoecon(eus, tasks, time, res):
       tasks.insert(0, Probe)
       return
 
-execute([Pylon, Gateway, Zealot, Zealot], reorder_autoecon, debug=True)
+execute([Pylon, Gateway, Zealot, Zealot], reorder_automin, debug=True)
+```
+
+Gas management
+==============
+
+Brood War has a secondary resource called Vespene Gas (typically just gas) that can be obtained some point after the start of the game, but not immediately. Gas timing is a very important part of build order design, and it is thus far not handle by our simple algorithm.
+
+We will update our scheduler to build a gas mining facility (Assimilator) once it is blocked by a unit that requires gas and has none.
+
+```python
+def reorder_autogas(eus, tasks, time, res):
+  """
+  Reorders upcoming tasks if the next task is not runnable. This implements the first step of a selection sort to move the first task that can be run to the front of the task queue.
+
+  The algorithm used here is to simply put the first runnable task as the start of the task queue or do nothing
+  """
+
+  reorder(eus, tasks, time, res)
+  reorder_automin(eus, tasks, time, res)
+
+  if not tasks: return
+
+  if tasks[0].gas > 0 and not [e for e in eus if e.unit.name=='Assimilator']:
+    tasks.insert(0, Assimilator)
+    return
+
+execute([Pylon, Gateway, Zealot, Zealot, Pylon, CyberneticsCore, Dragoon], reorder_autogas, debug=True)
 ```
 
 This simlifies the list of tasks that we need to supply, and also creates the opportunity for better economic management in the future.
