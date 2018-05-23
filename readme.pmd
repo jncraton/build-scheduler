@@ -339,7 +339,7 @@ tasks = [Pylon, Gateway, CyberneticsCore,
          CitadelOfAdun, TemplarArchives, DarkTemplar
         ]
 
-execute(tasks, autosupply, debug=True)
+execute(tasks[:], autosupply, debug=True)
 ```
 
 ```python
@@ -359,8 +359,9 @@ for task in tasks:
 
 for n1 in DAG.nodes:
   for n2 in DAG.nodes:
-    if n2.task.requires == n1.task.name:
-      DAG.add_edge(n1,n2)
+    for r in n2.task.requires:
+      if r == n1.task.name:
+        DAG.add_edge(n1,n2)
   
 import seaborn
 seaborn.set()
