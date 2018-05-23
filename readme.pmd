@@ -136,8 +136,8 @@ def execute(tasks, scheduler, units=[Nexus] + [Probe] * 4, debug=False):
   """
   Executes a set of tasks using a supplied scheduler
   
-  >>> execute([Probe], lambda *x: None)
-  13
+  >>> execute([Pylon, Gateway], lambda *x: None)
+  85
   >>> execute([Probe] * 4 + [Pylon, Gateway, Zealot], lambda *x: None)
   127
   >>> execute([Probe] * 4 + [Pylon, Gateway, Zealot, Nexus, Zealot], lambda *x: None)
@@ -172,7 +172,7 @@ def execute(tasks, scheduler, units=[Nexus] + [Probe] * 4, debug=False):
           tasks.pop(0)
           break
 
-    if not [t for t in tasks if t not in [Probe,Pylon]] and not [idle for idle in eus if idle.running!=None]: break
+    if not [t for t in tasks if t not in [Probe,Pylon]] and not [idle for idle in eus if not idle.running in [None,Probe,Pylon]]: break
 
     peons = len([t for t in eus if t.unit == Probe])
     bases = len([t for t in eus if t.unit == Nexus])
