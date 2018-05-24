@@ -325,6 +325,7 @@ execute(tasks[:], reorder_autosupply, debug=True)
 We need to add better planning to handle complicated dependencies. The first step to handling dependencies in a sensible way is to convert our operations into a directed acyclic graphs (DAG).
 
 ```python
+import math
 import networkx as nx
 import matplotlib.pyplot as plt
 
@@ -349,7 +350,7 @@ def get_dag(tasks):
       weight=n2.task.time
       
       if n2.task.executed_on == n1.task.name:
-        weight = n2.task.time * dag.node[n2]['count'] / dag.node[n1]['count']
+        weight = n2.task.time * math.ceil(dag.node[n2]['count'] / dag.node[n1]['count'])
         dag.add_edge(n1,n2,weight=weight)
         
       for r in n2.task.requires:
@@ -457,6 +458,49 @@ draw_dag(get_dag(zealots))
 ```
 
 This algorithm misses a key issue. While the gateway allows zealots to be built, it also creates a bottleneck. Right now, zealots are built individually over a long period of time. In Brood War, we have the option to invest in any number of gateways, so let's update our algorithm to handle explore that possibility.
+
+Let's try adding some tests to see if we can improve our longest path. Here's the current longest path:
+
+```python
+nx.dag_longest_path_length(get_dag(zealots))
+```
+
+And now with an extra gateway:
+
+```python
+two_gates = get_dag(zealots + [Gateway])
+draw_dag(two_gates)
+nx.dag_longest_path_length(two_gates)
+```
+
+This is almost twice as fast. Let's see if we can create an algorithm to automatically parallelize these hot paths in a scheduler.
+
+```python
+def parallelize(eus, tasks, time, res):
+  if not tasks: return
+
+  final = nx.dag_longest_path(get_dag(tasks))[-1]
+  bottleneck = final.task.executed_on
+
+  completed = [e.unit for e in eus]
+  completed = []
+
+  #print(completed + tasks)
+
+  len = nx.dag_longest_path_length(get_dag(completed + tasks))
+  new_len = nx.dag_longest_path_length(get_dag(completed + tasks + [units[bottleneck]]))
+
+  if new_len < len:
+    #print(new_len, len, [l.task for l in nx.dag_longest_path(get_dag(tasks))], nx.dag_longest_path(get_dag(tasks + [units[bottleneck]])))
+    for eu in eus:
+      if eu.can_run(eus, units[bottleneck], res):
+        tasks.insert(0, units[bottleneck])
+        return True
+
+  critical_path(eus, tasks, time, res)
+  
+execute(zealots[:], parallelize, debug=True)
+```
 
 Hotspot removal
 ===============
