@@ -340,19 +340,27 @@ def get_dag(tasks):
 
   for task in set(tasks):
     dag.add_node(Node(task))
+
+  for n in dag.nodes(data=True):
+    n[1]['count'] = len([t for t in tasks if t==n[0].task])
   
   for n1 in dag.nodes:
     for n2 in dag.nodes:
+      weight=n2.task.time
+      
+      if n2.task.executed_on == n1.task.name:
+        weight = n2.task.time * dag.node[n2]['count'] / dag.node[n1]['count']
+        dag.add_edge(n1,n2,weight=weight)
+        
       for r in n2.task.requires:
         if r == n1.task.name:
-          weight = n2.task.time * len([t for t in tasks if t==n2.task])
           dag.add_edge(n1,n2,weight=weight)
 
   return dag
 
 def draw_dag(dag):
   pos=nx.spectral_layout(dag)
-  plt.figure(1,figsize=(3,6)) 
+  plt.figure(1,figsize=(6,6)) 
   nx.draw(dag,pos, with_labels=True, node_size=60,font_size=12)
   labels = nx.get_edge_attributes(dag,'weight')
   nx.draw_networkx_edge_labels(dag,pos,edge_labels=labels, font_size=12)
