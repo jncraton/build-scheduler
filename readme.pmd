@@ -326,6 +326,7 @@ We need to add better planning to handle complicated dependencies. The first ste
 
 ```python
 import networkx as nx
+import matplotlib.pyplot as plt
 
 class Node:
   def __init__(self, task):
@@ -349,7 +350,14 @@ def get_dag(tasks):
 
   return dag
 
-nx.draw(get_dag(tasks), with_labels=True)
+def draw_dag(dag):
+  pos=nx.spectral_layout(dag)
+  plt.figure(1,figsize=(3,6)) 
+  nx.draw(dag,pos, with_labels=True, node_size=60,font_size=12)
+  labels = nx.get_edge_attributes(dag,'weight')
+  nx.draw_networkx_edge_labels(dag,pos,edge_labels=labels, font_size=12)
+
+draw_dag(get_dag(tasks))
 ```
 
 Topological Sorting and Kahn's Algorithm
@@ -437,7 +445,7 @@ execute(zealots[:], critical_path, debug=True)
 And the simple DAG:
 
 ```python
-nx.draw(get_dag(zealots), with_labels=True)
+draw_dag(get_dag(zealots))
 ```
 
 This algorithm misses a key issue. While the gateway allows zealots to be built, it also creates a bottleneck. Right now, zealots are built individually over a long period of time. In Brood War, we have the option to invest in any number of gateways, so let's update our algorithm to handle explore that possibility.
