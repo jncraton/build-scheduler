@@ -344,7 +344,8 @@ def get_dag(tasks):
     for n2 in dag.nodes:
       for r in n2.task.requires:
         if r == n1.task.name:
-          dag.add_edge(n1,n2,weight=n2.task.time)
+          weight = n2.task.time * len([t for t in tasks if t==n2.task])
+          dag.add_edge(n1,n2,weight=weight)
 
   return dag
 
