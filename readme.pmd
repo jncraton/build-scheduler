@@ -482,16 +482,12 @@ def parallelize(eus, tasks, time, res):
   final = nx.dag_longest_path(get_dag(tasks))[-1]
   bottleneck = final.task.executed_on
 
-  completed = [e.unit for e in eus]
-  completed = []
+  completed = [e.unit for e in eus[5:] if e.unit.executed_on == 'Probe'] # Exclude starting units
 
-  #print(completed + tasks)
+  current = nx.dag_longest_path_length(get_dag(completed + tasks))
+  new = nx.dag_longest_path_length(get_dag(completed + tasks + [units[bottleneck]]))
 
-  len = nx.dag_longest_path_length(get_dag(completed + tasks))
-  new_len = nx.dag_longest_path_length(get_dag(completed + tasks + [units[bottleneck]]))
-
-  if new_len < len:
-    #print(new_len, len, [l.task for l in nx.dag_longest_path(get_dag(tasks))], nx.dag_longest_path(get_dag(tasks + [units[bottleneck]])))
+  if new < current:
     for eu in eus:
       if eu.can_run(eus, units[bottleneck], res):
         tasks.insert(0, units[bottleneck])
