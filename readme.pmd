@@ -5,11 +5,11 @@
 
 Scheduling algoritms are important in many areas of Computer Science including CPU design, compiler design[1], and process scheduling. I will explore the task of applying scheduling to optimizing the ordering of dependent production tasks in the game StarCraft: Brood War.
 
-I will try to use CPU architecture metaphors as much as possible throughout this document to try to make as many connections to existing algorithms as possible. Anything that can perform a task will be thought of as an Execution Unit[3]. One unique aspect of scheduling execution unit in the case of Brood War is that our CPU is able to build new execution units on the fly.
+I will begin by exploring this task using a CPU scheduling metaphor. Anything that can perform a task will be thought of as an Execution Unit[3]. One unique aspect of scheduling execution unit in the case of Brood War is that our CPU is able to build new execution units on the fly.
 
 We will first apply some traditional algorithms to handle the typical case where the number and type of execution units are fixed.
 
-First, we need to define some units:
+First, we need to define some StarCraft units:
 
 ```python
 from collections import namedtuple
@@ -207,6 +207,8 @@ TASKS = [Probe] * 4 + [Pylon] + [Probe] * 4 + [Gateway, Zealot, Zealot]
 execute(TASKS[:], fifo, debug=True)
 ```
 
+One weakness of FIFO is that it fails to allow future tasks to run in paralell.
+
 Reordering (out-of-order execution)
 ===================================
 
@@ -238,7 +240,7 @@ Reordering with automated minerals
 
 In RTS games, a certain economic size (worker count, base count, etc) is typically a means to an end rather than a goal in itself. For this reason, I have created a scheduler that expects to not be told when to build workers or bases and instead automatically injects these as needed.
 
-For this simple implementation, the scheduler simply builds a worker if it is able to do so and commands fewer than 30 of them.
+For this simple implementation, the scheduler simply builds a worker if it is able to do so and commands fewer than 30 of them. It does not create additional bases.
 
 ```python
 def automin(eus, tasks, time, res):
@@ -439,7 +441,7 @@ Complexity and Correctness
 
 This scheduler ends up with O(n²) complexity with the number of steps in the build. It requires linear time to determine the critcal path, but this path must be calculated again for every step, so we end up with O(n²) time.
 
-This algorithm is obvious correct in that it completes the task at hand, but it is still not optimal.
+This algorithm is obviously correct in that it completes the task at hand, but it is still not optimal.
 
 Investment
 ==========
