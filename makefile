@@ -1,4 +1,4 @@
-SRC = readme
+SRC = index
 
 all: test $(SRC).html
 
