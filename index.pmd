@@ -182,6 +182,7 @@ def execute(tasks, scheduler, units=[Nexus] + [Probe] * 4, debug=False):
     res[1] += mining_rate(bases, gases, peons)[1]
 
   if debug:
+    print("Units: %s" % sorted([u.unit.name for u in eus]))
     print("Total makespan: %ds" % time)
   else:
     return time
