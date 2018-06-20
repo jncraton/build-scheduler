@@ -371,10 +371,12 @@ def draw_dag(dag):
 draw_dag(get_dag(tasks))
 ```
 
+This DAG gives us the data sctructure we need to begin reasoning about how much overall makespan duration depends on a particular task and optimize our scheduling accordingly.
+
 Topological Sorting and Kahn's Algorithm
 ----------------------------------------
 
-Next, we need to process our DAG into a list that is sorted topologically. [6]
+Next, we need to process our DAG into a list that is sorted topologically.[6] This allows us to determine what we are allowed to do next.
 
 We'll simply apply Kahn's algorithm to do the sorting[10]. Here's the psuedocode from Wikipedia [6]:
 
@@ -391,6 +393,16 @@ We'll simply apply Kahn's algorithm to do the sorting[10]. Here's the psuedocode
         return error (graph has at least one cycle)
     else 
         return L (a topologically sorted order)
+
+### Performance
+
+As we can see from examining this algorithm, it will handle each vertex exactly once and handle each edge once, so the overall performance will simple be O(n), where n is the number of vertices and edges in the graph.
+
+### Correctness
+
+This algorithm is correct as items are only added to the sorted list when they have no incoming edges. By definition, this means that L is sorted topologically. In the case where not all vertices are included in L, we can show that this is due to a cycle in our DAG and topological sorting is impossible.
+
+### Application
 
 Now we simply sort our DAG topologically:
 
@@ -522,3 +534,4 @@ References
 12. http://richoux.fr/publications/ecgg15_chapter-rts_ai.pdf
 13. https://en.wikipedia.org/wiki/Critical_path_method
 14. https://en.wikipedia.org/wiki/Longest_path_problem
+15. http://www.cs.nthu.edu.tw/~wkhon/ds/ds11/lecture/lecture12.pdf
