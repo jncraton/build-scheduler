@@ -1,6 +1,6 @@
 SRC = readme
 
-all: $(SRC).html
+all: test $(SRC).html
 
 $(SRC).html: $(SRC).pmd
 	pweave --format=md2html $(SRC).pmd
