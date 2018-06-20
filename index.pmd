@@ -423,7 +423,19 @@ The longest path problem for a general graph is NP-hard, but the variant needed 
 > 2. For each vertex v of the DAG, in the topological ordering, compute the length of the longest path ending at v by looking at its incoming neighbors and adding one to the maximum length recorded for those neighbors. If v has no incoming neighbors, set the length of the longest path ending at v to zero. In either case, record this number so that later steps of the algorithm can access it.
 > 3. Once this has been done, the longest path in the whole DAG may be obtained by starting at the vertex v with the largest recorded value, then repeatedly stepping backwards to its incoming neighbor with the largest recorded value, and reversing the sequence of vertices found in this way. [14]
 
-Here's the result of applying this to our DAG:
+### Performance
+
+We can see that this has linear time performance. Thanks to starting from a topological sorting, we can visit each node once in order and simply increment its path length based on its highest neighbor. Visiting each node once gives us linear time with respect to the number of nodes and edges.
+
+### Correctness
+
+Due to the topological sorting, this algorithm is obviously correct. Starting with paths of length zero, it incrementally adds length as it iterates in topological order. Every vertex is visited and is assigned a correct weight.
+
+### Application
+
+For our purposes, we will be using a weighted DAG. The algorithm is essentially the same except that path weights are used instead of simply incrementing by 1 for each path.
+
+Here's the result of applying this critical path algorithm to our DAG:
 
 ```python
 [str(n) for n in nx.dag_longest_path(get_dag(tasks))]
@@ -446,14 +458,14 @@ def critical_path(eus, tasks, time, res):
 execute(tasks[:], critical_path, debug=True)
 ```
 
-Note that the scheduler must recalculate the critical path on each run as the first element of the critical path may sometimes not be the second element from the previous run. This is due to the fact that there may be multiple paralell that need to be executed as such to optimize time efficiency.
+Note that the scheduler must recalculate the critical path on each run as the first element of the critical path may sometimes not be the second element from the previous run. This is due to the fact that there may be multiple paralell paths that need to be executed in slices to optimize time efficiency.
 
 Complexity and Correctness
 --------------------------
 
 This scheduler ends up with O(n²) complexity with the number of steps in the build. It requires linear time to determine the critcal path, but this path must be calculated again for every step, so we end up with O(n²) time.
 
-This algorithm is obviously correct in that it completes the task at hand, but it is still not optimal.
+This algorithm is correct in that it completes every requested task, but it is still not optimal.
 
 Investment
 ==========
@@ -471,7 +483,7 @@ And the simple DAG:
 draw_dag(get_dag(zealots))
 ```
 
-This algorithm misses a key issue. While the gateway allows zealots to be built, it also creates a bottleneck. Right now, zealots are built individually over a long period of time. In Brood War, we have the option to invest in any number of gateways, so let's update our algorithm to handle explore that possibility.
+Our previous algorithm misses a key issue. While the gateway allows zealots to be built, it also creates a bottleneck. Right now, zealots are built individually over a long period of time. In Brood War, we have the option to invest in any number of gateways, so let's update our algorithm to handle explore that possibility.
 
 Let's try adding some tests to see if we can improve our longest path. Here's the current longest path:
 
