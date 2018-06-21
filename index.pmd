@@ -530,11 +530,6 @@ def parallelize(eus, tasks, time, res):
 execute(zealots[:], parallelize, debug=True)
 ```
 
-Hotspot removal
-===============
-
-There are several ways to attempt this. The first I'll try to implement is the detection and removal of hotspots in 
-
 References
 ==========
 
