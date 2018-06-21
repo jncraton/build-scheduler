@@ -293,7 +293,7 @@ Each unit created in Brood War borrows a fixed amount of "supply" from the playe
 def autosupply(eus, tasks, time, res):
   if not tasks: return
 
-  if tasks[0].supply > res[2] and not in_production(eus, Pylon):
+  if (tasks[0].supply > res[2] or (time > 120 and res[2] < 8)) and not in_production(eus, Pylon):
     for eu in eus:
       if eu.can_run(eus, Pylon, res):
         tasks.insert(0, Pylon)
