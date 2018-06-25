@@ -7,6 +7,13 @@ Scheduling algoritms are important in many areas of Computer Science including C
 
 This sort of planning problem has high computational complexity when searching for an optimal solution.[17] depending on how the problem is framed, a basic planning problem may have PSPACE-complete complexity, and the details of StarCraft make this problem even more complex. I will explore several heuristics to make this problem more tractable for practical and even real time applications.
 
+StarCraft Overview
+==================
+
+StarCraft is a real-time strategy (RTS) game where players compete to build an economy and military with the goal of eliminating one another. A build order in StarCraft represents the order in which a player builds workers, units, and production structures in order to achieve certain goals as quickly as possible. This video provides a simple example of one basic build order:
+
+<iframe width="560" height="315" src="https://www.youtube-nocookie.com/embed/w_SKXc22Pmg?rel=0&amp;showinfo=0&amp;start=23" frameborder="0" allow="autoplay; encrypted-media" allowfullscreen></iframe>
+
 CPU Scheduling Algorithms
 =========================
 
@@ -565,3 +572,4 @@ References
 17. Bylander, Tom. "Complexity Results for Planning." In IJCAI, vol. 10, pp. 274-279. 1991.
 18. Chan, Hei, Alan Fern, Soumya Ray, Nick Wilson, and Chris Ventura. "Extending online planning for resource production in real-time strategy games with search." In Workshop on Planning in Games, ICAPS, vol. 2007. 2007.
 19. http://lbrandy.com/blog/2010/11/using-genetic-algorithms-to-find-starcraft-2-build-orders/
+20. https://www.youtube.com/watch?v=-8IycRLEBok
