@@ -144,7 +144,7 @@ class ExecutionUnit:
 Now let's add an `execute` function to schedule a set of tasks. This function takes a list of execution units, a list of tasks to complete, and a scheduler function to decide what to run.
 
 ```python
-def execute(tasks, scheduler, units=[Nexus] + [Probe] * 4, debug=False):
+def execute(tasks, scheduler, units=[Nexus] + [Probe] * 4, debug=False, debug_completed=False):
   """
   Executes a set of tasks using a supplied scheduler
   
@@ -163,12 +163,13 @@ def execute(tasks, scheduler, units=[Nexus] + [Probe] * 4, debug=False):
 
   def message(msg):
     if debug:
-      print('%ds (%d minerals, %d gas, %d supply): %s' % (time, res[0], res[1], res[2], msg))
+      print('%3ds, %4d ore, %4d gas, %3d available supply - %s' % (time, res[0], res[1], res[2], msg))
 
   for time in range(0,600):
     for eu in eus:
       if eu.running and eu.idle_at <= time:
-        message("Completed %s." % eu.running.name)
+        if debug_completed:
+          message("Completed %s." % eu.running.name)
         if eu.running.supply < 0:
           res[2] -= eu.running.supply
         eus.append(ExecutionUnit(eu.complete()))
