@@ -229,7 +229,7 @@ We'll now implement a simple algorithm to allow future operations to be schedule
 
 An example of the overall architecture and usage of this algorithm is moder superscalar CPUs can be seen in this diagram of the Core 2 microarchitecture[21]:
 
-![](intel-core2-arch.png)
+![](media/intel-core2-arch.png)
 
 This algorithm is still trivial in terms of both complexity (O(n)) and correctness (everything still runs), so I'll skip formal validation. Our implementation here simply selects the first task from the "reorder buffer" that doesn't have unmet dependencies. This eliminates some stalling when the next task to be executed is blocked, but others could be run.
 
