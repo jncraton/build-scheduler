@@ -10,5 +10,4 @@ install:
     - pip3 install -r requirements.txt
 script:
     - make test
-    - make readme.md
-    - cat readme.md
+    - make
