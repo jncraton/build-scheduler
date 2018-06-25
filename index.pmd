@@ -530,6 +530,19 @@ def parallelize(eus, tasks, time, res):
 execute(zealots[:], parallelize, debug=True)
 ```
 
+Other Algorithms
+================
+
+Brute Force
+-----------
+
+The search space for a build order is actually very large due to it's exponential nature. Brute force for most ways of framing this problem is superpolynomial.
+
+Genetic Algorithms
+------------------
+
+Genetic algorithms are a common way to solve this problem. While not elimating the high computational complexity of the complete solution, genetic algorithms allow us to hopefully asymtotically approach the ideal solution with respect to computing time. Genetic algorithms have been applied in this field and created nice practical results.[19] One notable result was the discovery of the 7 Roach Rush in 2010.
+
 References
 ==========
 
@@ -551,3 +564,4 @@ References
 16. Churchill, David, and Michael Buro. "Build Order Optimization in StarCraft." In AIIDE, pp. 14-19. 2011.
 17. Bylander, Tom. "Complexity Results for Planning." In IJCAI, vol. 10, pp. 274-279. 1991.
 18. Chan, Hei, Alan Fern, Soumya Ray, Nick Wilson, and Chris Ventura. "Extending online planning for resource production in real-time strategy games with search." In Workshop on Planning in Games, ICAPS, vol. 2007. 2007.
+19. http://lbrandy.com/blog/2010/11/using-genetic-algorithms-to-find-starcraft-2-build-orders/
