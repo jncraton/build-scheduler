@@ -227,7 +227,11 @@ Reordering (out-of-order execution)
 
 We'll now implement a simple algorithm to allow future operations to be scheduled if the next operation is blocked. The CPU metaphor is not perfect here, but this borrows the concept of dependency handling and a reservation station from Tomasulo's algorithm. [4][9]
 
-This algorithm is still trivial in terms of both complexity (O(n)) and correctness (everything still runs), so I'll skip formal validation.
+An example of the overall architecture and usage of this algorithm is moder superscalar CPUs can be seen in this diagram of the Core 2 microarchitecture[21]:
+
+![](intel-core2-arch.png)
+
+This algorithm is still trivial in terms of both complexity (O(n)) and correctness (everything still runs), so I'll skip formal validation. Our implementation here simply selects the first task from the "reorder buffer" that doesn't have unmet dependencies. This eliminates some stalling when the next task to be executed is blocked, but others could be run.
 
 ```python
 def reorder(eus, tasks, time, res):
@@ -573,3 +577,4 @@ References
 18. Chan, Hei, Alan Fern, Soumya Ray, Nick Wilson, and Chris Ventura. "Extending online planning for resource production in real-time strategy games with search." In Workshop on Planning in Games, ICAPS, vol. 2007. 2007.
 19. http://lbrandy.com/blog/2010/11/using-genetic-algorithms-to-find-starcraft-2-build-orders/
 20. https://www.youtube.com/watch?v=-8IycRLEBok
+21. https://en.wikipedia.org/wiki/Microarchitecture
