@@ -1,4 +1,4 @@
-% Algorithm Report 1: Task Scheduling
+% Algorithm Report 1: Build Order Scheduling
 % Jon Craton
 
 [![Build Status](https://travis-ci.org/jncraton/build-scheduler.svg?branch=master)](https://travis-ci.org/jncraton/build-scheduler)
