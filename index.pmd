@@ -14,14 +14,7 @@ StarCraft is a real-time strategy (RTS) game where players compete to build an e
 
 <iframe width="560" height="315" src="https://www.youtube-nocookie.com/embed/w_SKXc22Pmg?rel=0&amp;showinfo=0&amp;start=23" frameborder="0" allow="autoplay; encrypted-media" allowfullscreen></iframe>
 
-CPU Scheduling Algorithms
-=========================
-
-I will begin by exploring this task using a CPU scheduling metaphor. Anything that can perform a task will be thought of as an Execution Unit[3]. One unique aspect of scheduling execution units in the case of Brood War is that our CPU is able to build new execution units on the fly.
-
-We will first apply some traditional algorithms to handle the typical case where the number and type of execution units are fixed.
-
-First, we need to define some StarCraft units:
+Let's define some StarCraft units:
 
 ```python
 from collections import namedtuple
@@ -94,6 +87,13 @@ def mining_rate(bases, assimilators, workers):
       
   return (min_per_base * bases, assimilators * (309 / 60))
 ```
+
+CPU Scheduling Algorithms
+=========================
+
+I will begin by exploring this task using a CPU scheduling metaphor. Anything that can perform a task will be thought of as an Execution Unit[3]. One unique aspect of scheduling execution units in the case of Brood War is that our CPU is able to build new execution units on the fly.
+
+We will first apply some traditional algorithms to handle the typical case where the number and type of execution units are fixed.
 
 We'll create a class to wrap our execution units in to track what they are running and how long it will take to finish the work:
 
@@ -223,6 +223,11 @@ execute(TASKS[:], fifo, debug=True)
 
 One weakness of FIFO is that it fails to allow future tasks to run in paralell.
 
+Correctness and performance
+---------------------------
+
+This "algorithm" is obviously correct as all tasks are completed. It takes no time to execute as it doesn't do anything.
+
 Reordering (out-of-order execution)
 ===================================
 
@@ -231,8 +236,6 @@ We'll now implement a simple algorithm to allow future operations to be schedule
 An example of the overall architecture and usage of this algorithm is moder superscalar CPUs can be seen in this diagram of the Core 2 microarchitecture[21]:
 
 ![](media/intel-core2-arch.png)
-
-This algorithm is still trivial in terms of both complexity (O(n)) and correctness (everything still runs), so I'll skip formal validation. Our implementation here simply selects the first task from the "reorder buffer" that doesn't have unmet dependencies. This eliminates some stalling when the next task to be executed is blocked, but others could be run.
 
 ```python
 def reorder(eus, tasks, time, res):
@@ -253,8 +256,16 @@ execute(TASKS[:], reorder, debug=True)
 
 We were able to remove 23s of stalling on this simple task by simply using reordering.
 
-Reordering with automated minerals
+Correctness and performance
+---------------------------
+
+This algorithm is still trivial in terms of both complexity (O(n)) and correctness (everything still runs), so I'll skip formal validation. Our implementation here simply selects the first task from the "reorder buffer" that doesn't have unmet dependencies. This eliminates some stalling when the next task to be executed is blocked, but others could be run.
+
+Routine task automation heuristics
 ==================================
+
+Reordering with automated minerals
+----------------------------------
 
 In RTS games, a certain economic size (worker count, base count, etc) is typically a means to an end rather than a goal in itself. For this reason, I have created a scheduler that expects to not be told when to build workers or bases and instead automatically injects these as needed.
 
@@ -275,7 +286,7 @@ execute([Pylon, Gateway, Zealot, Zealot], reorder_automin, debug=True)
 ```
 
 Gas management
-==============
+--------------
 
 Brood War has a secondary resource called Vespene Gas (typically just gas) that can be obtained some point after the start of the game, but not immediately. Gas timing is a very important part of build order design, and it is thus far not handle by our simple algorithm.
 
@@ -302,7 +313,7 @@ execute([Pylon, Gateway, Zealot, Zealot, Pylon, CyberneticsCore, Dragoon], reord
 This handles ensuring that we don't get blocked on units that require gas, but it is a very weak planning method.
 
 Supply management
-=================
+-----------------
 
 Each unit created in Brood War borrows a fixed amount of "supply" from the players total supply. Supply is created by creating Pylons. We can automatically manage supply in the same way as we just did for gas.
 
@@ -327,6 +338,11 @@ execute([Pylon, Gateway, Zealot, Zealot, CyberneticsCore, Dragoon], reorder_auto
 ```
 
 Now we should never be supply blocked. We can also see that this algorithm completes the requested tasks in the same amount of time as the above, but has a stronger economic position.
+
+Correctness and performance
+---------------------------
+
+These simply constant time heuristics add nothing the the algorithm in terms of complexity (these are trivial constant time checks), but they do improve the performance significantly.
 
 Directed Acyclic Graph
 ======================
@@ -412,24 +428,24 @@ We'll simply apply Kahn's algorithm to do the sorting[10]. Here's the psuedocode
     else 
         return L (a topologically sorted order)
 
-### Performance
-
-As we can see from examining this algorithm, it will handle each vertex exactly once and handle each edge once, so the overall performance will simple be O(n), where n is the number of vertices and edges in the graph.
-
-### Correctness
-
-This algorithm is correct as items are only added to the sorted list when they have no incoming edges. By definition, this means that L is sorted topologically. In the case where not all vertices are included in L, we can show that this is due to a cycle in our DAG and topological sorting is impossible.
-
-### Application
-
 Now we simply sort our DAG topologically:
 
 ```python3
 [str(n) for n in nx.topological_sort(get_dag(tasks))]
 ```
 
+Performance
+-----------
+
+As we can see from examining this algorithm, it will handle each vertex exactly once and handle each edge once, so the overall performance will simple be O(n), where n is the number of vertices and edges in the graph.
+
+Correctness
+-----------
+
+This algorithm is correct as items are only added to the sorted list when they have no incoming edges. By definition, this means that L is sorted topologically. In the case where not all vertices are included in L, we can show that this is due to a cycle in our DAG and topological sorting is impossible.
+
 Critical Path
--------------
+=============
 
 Our scheduling system up to this point does not include any advanced planning and simply tries to grab the first available piece of work. What we would like to do is find the critical path[13] through our DAG and begin working on it first. Generally, we need to solve the longest path problem[14] for our DAG.
 
@@ -440,16 +456,6 @@ The longest path problem for a general graph is NP-hard, but the variant needed 
 > 1. Find a topological ordering of the given DAG.
 > 2. For each vertex v of the DAG, in the topological ordering, compute the length of the longest path ending at v by looking at its incoming neighbors and adding one to the maximum length recorded for those neighbors. If v has no incoming neighbors, set the length of the longest path ending at v to zero. In either case, record this number so that later steps of the algorithm can access it.
 > 3. Once this has been done, the longest path in the whole DAG may be obtained by starting at the vertex v with the largest recorded value, then repeatedly stepping backwards to its incoming neighbor with the largest recorded value, and reversing the sequence of vertices found in this way. [14]
-
-### Performance
-
-We can see that this has linear time performance. Thanks to starting from a topological sorting, we can visit each node once in order and simply increment its path length based on its highest neighbor. Visiting each node once gives us linear time with respect to the number of nodes and edges.
-
-### Correctness
-
-Due to the topological sorting, this algorithm is obviously correct. Starting with paths of length zero, it incrementally adds length as it iterates in topological order. Every vertex is visited and is assigned a correct weight.
-
-### Application
 
 For our purposes, we will be using a weighted DAG. The algorithm is essentially the same except that path weights are used instead of simply incrementing by 1 for each path.
 
@@ -478,15 +484,18 @@ execute(tasks[:], critical_path, debug=True)
 
 Note that the scheduler must recalculate the critical path on each run as the first element of the critical path may sometimes not be the second element from the previous run. This is due to the fact that there may be multiple paralell paths that need to be executed in slices to optimize time efficiency.
 
-Complexity and Correctness
---------------------------
+Performance
+-----------
 
 This scheduler ends up with O(n²) complexity with the number of steps in the build. It requires linear time to determine the critcal path, but this path must be calculated again for every step, so we end up with O(n²) time.
 
-This algorithm is correct in that it completes every requested task, but it is still not optimal.
+Correctness
+-----------
 
-Investment
-==========
+Due to the topological sorting, this algorithm is obviously correct. Starting with paths of length zero, it incrementally adds length as it iterates in topological order. Every vertex is visited and is assigned a correct weight. This algorithm is correct in that it completes every requested task, but it is still not optimal.
+
+Hotspot Removal
+===============
 
 The next thing that we need to add to our scheduler is the concept of investment. Consider the following task:
 
