@@ -569,7 +569,7 @@ Let's create a fairly complex problem to schedule and then measure the performan
 Makespan vs tasks
 -----------------
 
-```python
+```python, results='hidden'
 tasks = [Pylon,Gateway,
   Zealot, Zealot, Zealot, Zealot, Zealot, Zealot, Zealot, Zealot, Zealot, Zealot, Zealot, Zealot, 
   CyberneticsCore,
@@ -584,7 +584,16 @@ tasks = [Pylon,Gateway,
 algs = ['supply_gas', 'supply_gas_min', 'reorder_autosupply', 'critical_path', 'parallelize']
 
 for alg in algs:
-  print("%s: %d" % (alg, execute(tasks[:], locals()[alg])))
+  makespan = []
+  for i in range(0, len(tasks), 5):
+    makespan.append((i, execute(tasks[0:i], locals()[alg])))
+
+  plt.plot([m[0] for m in makespan], [m[1] for m in makespan], label=alg)
+
+plt.xlabel('Number of tasks')
+plt.ylabel('Makespan (s)')
+plt.title('Makespan vs number of tasks')
+plt.legend()
 ```
 
 Interestingly, we see that for this task, naive critical path searching performs worse than simple reordering in terms of total makespan. This is due to the fact that it over focuses on developing its longest tech route instead of squeezing in units where it can.
