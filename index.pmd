@@ -35,6 +35,7 @@ Probe = Unit('Probe','Nexus',50,0,1,13,tuple())
 Zealot = Unit('Zealot','Gateway',100,0,2,25,('Gateway',))
 Dragoon = Unit('Dragoon','Gateway',125,50,2,32,('CyberneticsCore',))
 DarkTemplar = Unit('DarkTemplar','Gateway',125,100,2,32,('TemplarArchives',))
+HighTemplar = Unit('HighTemplar','Gateway',50,150,2,50,('TemplarArchives',))
 Observer = Unit('Observer','RoboticsFacility',25,75,1,25,('Observatory',))
 
 units = locals()
@@ -165,7 +166,7 @@ def execute(tasks, scheduler, units=[Nexus] + [Probe] * 4, debug=False, debug_co
     if debug:
       print('%3ds %4d ore %4d gas %3d supply   %s' % (time, res[0], res[1], res[2], msg))
 
-  for time in range(0,600):
+  for time in range(0,60000):
     for eu in eus:
       if eu.running and eu.idle_at <= time:
         if debug_completed:
@@ -494,10 +495,10 @@ Correctness
 
 Due to the topological sorting, this algorithm is obviously correct. Starting with paths of length zero, it incrementally adds length as it iterates in topological order. Every vertex is visited and is assigned a correct weight. This algorithm is correct in that it completes every requested task, but it is still not optimal.
 
-Hotspot Removal
-===============
+Bottleneck Removal
+==================
 
-The next thing that we need to add to our scheduler is the concept of investment. Consider the following task:
+The next thing that we need to add to our scheduler is the concept of bottleneck removal. Consider the following task:
 
 ```python
 zealots = [Pylon,Gateway] + [Zealot]*12
@@ -549,6 +550,27 @@ def parallelize(eus, tasks, time, res):
   critical_path(eus, tasks, time, res)
   
 execute(zealots[:], parallelize, debug=True)
+```
+
+Performance Comparison
+======================
+
+Let's create a fairly complex problem to solve and then measure the performance of each algorithm both in terms of compuational time and in terms of total makespan.
+
+```python
+tasks = [Pylon,Gateway,
+  Zealot, Zealot, Zealot, Zealot, Zealot, Zealot, Zealot, Zealot, Zealot, Zealot, Zealot, Zealot, 
+  CyberneticsCore,
+  Dragoon, Dragoon, Dragoon, Dragoon, Dragoon, Dragoon,Dragoon, Dragoon, Dragoon,Dragoon, Dragoon, Dragoon,
+  RoboticsFacility,Observatory,
+  Observer, Observer,
+  CitadelOfAdun,TemplarArchives,
+  HighTemplar,HighTemplar,HighTemplar,HighTemplar
+]
+  
+print(execute(tasks[:], autosupply, debug=True))
+print(execute(tasks[:], critical_path))
+print(execute(tasks[:], parallelize))
 ```
 
 Other Algorithms
