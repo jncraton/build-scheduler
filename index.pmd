@@ -64,8 +64,8 @@ def mining_rate(bases, assimilators, workers):
 
   >>> mining_rate(1, 1, 3)
   (0.0, 5.15)
-  (0.0, 10.3)
   >>> mining_rate(1, 2, 6)
+  (0.0, 10.3)
 
   Make sure we don't have any crosstalk between gas and mineral rates:
 
