@@ -64,8 +64,8 @@ def mining_rate(bases, assimilators, workers):
 
   >>> mining_rate(1, 1, 3)
   (0.0, 5.15)
-  >>> mining_rate(1, 2, 6)
   (0.0, 10.3)
+  >>> mining_rate(1, 2, 6)
 
   Make sure we don't have any crosstalk between gas and mineral rates:
 
@@ -257,10 +257,15 @@ execute(TASKS[:], reorder, debug=True)
 
 We were able to remove 23s of stalling on this simple task by simply using reordering.
 
-Correctness and performance
----------------------------
+Correctness
+-----------
 
-This algorithm is still trivial in terms of both complexity (O(n)) and correctness (everything still runs), so I'll skip formal validation. Our implementation here simply selects the first task from the "reorder buffer" that doesn't have unmet dependencies. This eliminates some stalling when the next task to be executed is blocked, but others could be run.
+This algorithm is correct because it still includes all tasks. It returns provably suboptimal makespans in most cases as we will show soon. It adheres to the required dependencies, so tasks are not schduled until they are legally able to be executed.
+
+Performance
+-----------
+
+In the worst case, this algorithm requires a linear scan of all current units, and because the number of units steadily increases, we see that this algorithm has O(n²) complexity.
 
 Routine task automation heuristics
 ==================================
@@ -347,13 +352,18 @@ execute([Pylon, Gateway, Zealot, Zealot, CyberneticsCore, Dragoon], reorder_auto
 
 Now we should never be supply blocked. We can also see that this algorithm completes the requested tasks in the same amount of time as the above, but has a stronger economic position.
 
-Correctness and performance
----------------------------
+Correctness
+-----------
 
-These simply constant time heuristics add nothing the the algorithm in terms of complexity (these are trivial constant time checks), but they do improve the performance significantly.
+Given that these few additions never remove tasks from the schedule, they will return valid schedules.
 
-Directed Acyclic Graph
-======================
+Performance
+-----------
+
+These simple constant time heuristics add nothing the the algorithm in terms of big-O complexity, but they do improve the performance of the final makespan significantly significantly.
+
+Topological Sorting 
+===================
 
 Let's consider a more complex production problem that includes multiple branches and explore how to optimize it. Let's try to build an Observer and a Dark Templar as quickly as possible.
 
@@ -367,6 +377,9 @@ execute(tasks[:], reorder_autosupply, debug=True)
 ```
 
 We need to add better planning to handle complicated dependencies. The first step to handling dependencies in a sensible way is to convert our operations into a directed acyclic graphs (DAG).
+
+Directed Acyclic Graph
+----------------------
 
 ```python
 import math
@@ -417,8 +430,8 @@ draw_dag(get_dag(tasks))
 
 This DAG gives us the data sctructure we need to begin reasoning about how much overall makespan duration depends on a particular task and optimize our scheduling accordingly.
 
-Topological Sorting and Kahn's Algorithm
-----------------------------------------
+Kahn's Algorithm
+----------------
 
 Next, we need to process our DAG into a list that is sorted topologically.[6] This allows us to determine what we are allowed to do next.
 
@@ -447,7 +460,7 @@ Now we simply sort our DAG topologically:
 Performance
 -----------
 
-As we can see from examining this algorithm, it will handle each vertex exactly once and handle each edge once, so the overall performance will simple be O(n), where n is the number of vertices and edges in the graph.
+As we can see from examining this algorithm, it will handle each vertex exactly once and handle each edge once, so the overall performance will simple be O(n), where n is the number of vertices and edges in the graph. However, because we need to run this algorithm once for every frame in our makespan, the total performance is O(n²). This performance asseassumes that we do the work to store and maintain a DAG throughout the process.
 
 Correctness
 -----------
@@ -504,8 +517,8 @@ Correctness
 
 Due to the topological sorting, this algorithm is obviously correct. Starting with paths of length zero, it incrementally adds length as it iterates in topological order. Every vertex is visited and is assigned a correct weight. This algorithm is correct in that it completes every requested task, but it is still not optimal.
 
-Bottleneck Removal
-==================
+Parallelizing Tasks
+===================
 
 The next thing that we need to add to our scheduler is the concept of bottleneck removal. Consider the following task:
 
@@ -673,3 +686,4 @@ References
 19. http://lbrandy.com/blog/2010/11/using-genetic-algorithms-to-find-starcraft-2-build-orders/
 20. https://www.youtube.com/watch?v=-8IycRLEBok
 21. https://en.wikipedia.org/wiki/Microarchitecture
+22. https://liquipedia.net/starcraft/Main_Page
