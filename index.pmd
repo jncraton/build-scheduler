@@ -198,8 +198,8 @@ def execute(tasks, scheduler, units=[Nexus] + [Probe] * 4, debug=False, debug_co
   if debug:
     print("Units: %s" % sorted([u.unit.name for u in eus]))
     print("Total makespan: %ds" % time)
-  else:
-    return time
+
+  return time
 ```
 
 FIFO (In-order execution)
@@ -275,7 +275,7 @@ For this simple implementation, the scheduler simply builds a worker if it is ab
 ```python
 def automin(eus, tasks, time, res):
   for eu in eus:
-    if eu.can_run(eus,Probe, res):
+    if eu.can_run(eus,Probe, res) and len([e for e in eus if e.unit == Probe]) <= 30:
       tasks.insert(0, Probe)
       return True
 
@@ -328,12 +328,19 @@ def autosupply(eus, tasks, time, res):
         tasks.insert(0, Pylon)
         return True
 
+def supply_gas(eus, tasks, time, res):
+  if not tasks: return
+  if autogas(eus, tasks, time, res): return
+  if autosupply(eus, tasks, time, res): return
+
+def supply_gas_min(eus, tasks, time, res):
+  if not tasks: return
+  if supply_gas(eus, tasks, time, res): return
+  if automin(eus, tasks, time, res): return
+
 def reorder_autosupply(eus, tasks, time, res):
   reorder(eus, tasks, time, res)
-  autosupply(eus, tasks, time, res)
-  
-  if reorder_autogas(eus, tasks, time, res):
-    return True
+  supply_gas_min(eus, tasks, time, res)
 
 execute([Pylon, Gateway, Zealot, Zealot, CyberneticsCore, Dragoon], reorder_autosupply, debug=True)
 ```
@@ -365,6 +372,8 @@ We need to add better planning to handle complicated dependencies. The first ste
 import math
 import networkx as nx
 import matplotlib.pyplot as plt
+import seaborn as sns
+sns.set()
 
 class Node:
   def __init__(self, task):
@@ -472,13 +481,13 @@ Let's now build a scheduler that uses the critical path to decide what to run ne
 def critical_path(eus, tasks, time, res):
   if not tasks: return
 
-  new_start = nx.dag_longest_path(get_dag(tasks))[0]
-  tasks.remove(new_start.task)
-  tasks.insert(0, new_start.task)
-
   if autosupply(eus, tasks, time, res): return
   if automin(eus, tasks, time, res): return
   if autogas(eus, tasks, time, res): return
+
+  new_start = nx.dag_longest_path(get_dag(tasks))[0]
+  tasks.remove(new_start.task)
+  tasks.insert(0, new_start.task)
 
 execute(tasks[:], critical_path, debug=True)
 ```
@@ -555,7 +564,10 @@ execute(zealots[:], parallelize, debug=True)
 Performance Comparison
 ======================
 
-Let's create a fairly complex problem to solve and then measure the performance of each algorithm both in terms of compuational time and in terms of total makespan.
+Let's create a fairly complex problem to schedule and then measure the performance of each algorithm both in terms of compuational time and in terms of total makespan.
+
+Makespan vs tasks
+-----------------
 
 ```python
 tasks = [Pylon,Gateway,
@@ -565,12 +577,54 @@ tasks = [Pylon,Gateway,
   RoboticsFacility,Observatory,
   Observer, Observer,
   CitadelOfAdun,TemplarArchives,
-  HighTemplar,HighTemplar,HighTemplar,HighTemplar
+  HighTemplar,HighTemplar,HighTemplar,HighTemplar,
+  DarkTemplar,DarkTemplar,DarkTemplar,DarkTemplar,
 ]
-  
-print(execute(tasks[:], autosupply, debug=True))
-print(execute(tasks[:], critical_path))
-print(execute(tasks[:], parallelize))
+
+algs = ['supply_gas', 'supply_gas_min', 'reorder_autosupply', 'critical_path', 'parallelize']
+
+for alg in algs:
+  print("%s: %d" % (alg, execute(tasks[:], locals()[alg])))
+```
+
+Interestingly, we see that for this task, naive critical path searching performs worse than simple reordering in terms of total makespan. This is due to the fact that it over focuses on developing its longest tech route instead of squeezing in units where it can.
+
+Scheduler time vs tasks
+-----------------------
+
+```python,results="hidden"
+import time
+
+for alg in algs:
+  runtime = []
+  for i in range(0, len(tasks), 2):
+    start = time.process_time()
+    for j in range(0,100):
+      locals()[alg]([ExecutionUnit(u) for u in ([Probe] * 4 + [Pylon, Gateway, Zealot])],tasks[0:i],0,[50,0,6])
+    runtime.append((i, (time.process_time() - start) * 10))
+
+  plt.plot([m[0] for m in runtime], [m[1] for m in runtime], label=alg)
+
+plt.xlabel('Number of tasks')
+plt.ylabel('Runtime (ms)')
+plt.title('Scheduler single runtime vs tasks')
+plt.legend()
+```
+
+```python,results="hidden"
+for alg in algs:
+  runtime = []
+  for i in range(0, len(tasks), 5):
+    start = time.process_time()
+    execute(tasks[0:i], locals()[alg])
+    runtime.append((i, (time.process_time() - start) * 10))
+
+  plt.plot([m[0] for m in runtime], [m[1] for m in runtime], label=alg)
+
+plt.xlabel('Number of tasks')
+plt.ylabel('Runtime (ms)')
+plt.title('Total runtime vs tasks')
+plt.legend()
 ```
 
 Other Algorithms
