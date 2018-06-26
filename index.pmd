@@ -163,7 +163,7 @@ def execute(tasks, scheduler, units=[Nexus] + [Probe] * 4, debug=False, debug_co
 
   def message(msg):
     if debug:
-      print('%3ds, %4d ore, %4d gas, %3d available supply - %s' % (time, res[0], res[1], res[2], msg))
+      print('%3ds %4d ore %4d gas %3d supply   %s' % (time, res[0], res[1], res[2], msg))
 
   for time in range(0,600):
     for eu in eus:
