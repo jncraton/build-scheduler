@@ -657,6 +657,11 @@ Brute Force
 
 The search space for a build order is actually very large due to it's exponential nature. Brute force for most ways of framing this problem is superpolynomial.
 
+Depth-First Branch and Bound
+----------------------------
+
+Depth-first branch and bound as suggested by Churchill[16] will produce an optimal makespan. This algorithm will require superpolynomial time as the search space is superpolynomial, but it has the advantage of returning at any point with a working schedule. This feature is useful for real-time applications. 
+
 Genetic Algorithms
 ------------------
 
