@@ -5,7 +5,7 @@
 [![GitHub last commit](https://img.shields.io/github/last-commit/jncraton/build-scheduler.svg)](https://github.com/jncraton/build-scheduler)
 ![Codacy grade](https://img.shields.io/codacy/grade/c6b117c2fbdb499e91286969e2cbd137.svg)
 
-Scheduling algoritms are important in many areas of Computer Science including CPU design, compiler design[1], and process scheduling. I will explore the task of applying scheduling to optimizing the ordering of dependent production tasks in the game StarCraft: Brood War.
+Scheduling algorithms are important in many areas of Computer Science including CPU design, compiler design[1], and process scheduling. I will explore the task of applying scheduling to optimizing the ordering of dependent production tasks in the game StarCraft: Brood War.
 
 This sort of planning problem has high computational complexity when searching for an optimal solution.[17] depending on how the problem is framed, a basic planning problem may have PSPACE-complete complexity, and the details of StarCraft make this problem even more complex. I will explore several heuristics to make this problem more tractable for practical and even real time applications.
 
@@ -69,7 +69,7 @@ def mining_rate(bases, assimilators, workers):
   >>> mining_rate(1, 2, 6)
   (0.0, 10.3)
 
-  Make sure we don't have any crosstalk between gas and mineral rates:
+  Make sure we don't have any cross talk between gas and mineral rates:
 
   >>> mining_rate(1, 1, 12)
   (9.75, 5.15)
@@ -245,7 +245,7 @@ TASKS = [Probe] * 4 + [Pylon] + [Probe] * 4 + [Gateway, Zealot, Zealot]
 simulate(TASKS[:], fifo, debug=True)
 ```
 
-One weakness of FIFO is that it fails to allow future tasks to run in paralell.
+One weakness of FIFO is that it fails to allow future tasks to run in parallel.
 
 Correctness and performance
 ---------------------------
@@ -257,7 +257,7 @@ Reordering (out-of-order execution)
 
 We'll now implement a simple algorithm to allow future operations to be scheduled if the next operation is blocked. The CPU metaphor is not perfect here, but this borrows the concept of dependency handling and a reservation station from Tomasulo's algorithm. [4][9]
 
-An example of the overall architecture and usage of this algorithm is moder superscalar CPUs can be seen in this diagram of the Core 2 microarchitecture[21]:
+An example of the overall architecture and usage of this algorithm in modern superscalar CPUs can be seen in this diagram of the Core 2 microarchitecture[21]:
 
 ![](media/intel-core2-arch.png)
 
@@ -292,7 +292,7 @@ We were able to remove 23s of stalling on this simple task by simply using reord
 Correctness
 -----------
 
-This algorithm is correct because it still includes all tasks. It returns provably suboptimal makespans in most cases as we will show soon. It adheres to the required dependencies, so tasks are not schduled until they are legally able to be simulated.
+This algorithm is correct because it still includes all tasks. It returns provably sub-optimal makespans in most cases as we will show soon. It adheres to the required dependencies, so tasks are not scheduled until they are legally able to be simulated.
 
 Performance
 -----------
@@ -460,9 +460,9 @@ def draw_dag(dag):
 draw_dag(get_dag(tasks))
 ```
 
-This DAG gives us the data sctructure we need to begin reasoning about how much overall makespan duration depends on a particular task and optimize our scheduling accordingly.
+This DAG gives us the data structure we need to begin reasoning about how much overall makespan duration depends on a particular task and optimize our scheduling accordingly.
 
-Note that each task type is included only once in the DAG. The path weights are used to track total time to complete a set of identical task. For example, if the current schedule includes building 12 Zealots from 2 Gateways, the DAG will include a Gateway node pointing to a Zealot node with a weight of `(12 Zealot / 2 Gateways) * Zealot build time`. This optimization makes it possible to reason easily about paralell tasks by path length through the graph.
+Note that each task type is included only once in the DAG. The path weights are used to track total time to complete a set of identical task. For example, if the current schedule includes building 12 Zealots from 2 Gateways, the DAG will include a Gateway node pointing to a Zealot node with a weight of `(12 Zealot / 2 Gateways) * Zealot build time`. This optimization makes it possible to reason easily about parallel tasks by path length through the graph.
 
 Kahn's Algorithm
 ----------------
@@ -494,7 +494,7 @@ Now we simply sort our DAG topologically:
 Performance
 -----------
 
-As we can see from examining this algorithm, it will handle each vertex exactly once and handle each edge once, so the overall performance will simple be O(n), where n is the number of vertices and edges in the graph. However, because we need to run this algorithm once for every frame in our makespan, the total performance is O(n²). This performance asseassumes that we do the work to store and maintain a DAG throughout the process.
+As we can see from examining this algorithm, it will handle each vertex exactly once and handle each edge once, so the overall performance will simple be O(n), where n is the number of vertices and edges in the graph. However, because we need to run this algorithm once for every frame in our makespan, the total performance is O(n²). This performance assessment assumes that we do the work to store and maintain a DAG throughout the process.
 
 Correctness
 -----------
@@ -539,12 +539,12 @@ def critical_path(eus, tasks, time, res):
 simulate(tasks[:], critical_path, debug=True)
 ```
 
-Note that the scheduler must recalculate the critical path on each run as the first element of the critical path may sometimes not be the second element from the previous run. This is due to the fact that there may be multiple paralell paths that need to be simulated in slices to optimize time efficiency.
+Note that the scheduler must recalculate the critical path on each run as the first element of the critical path may sometimes not be the second element from the previous run. This is due to the fact that there may be multiple parallel paths that need to be simulated in slices to optimize time efficiency.
 
 Performance
 -----------
 
-This scheduler ends up with O(n²) complexity with the number of steps in the build. It requires linear time to determine the critcal path, but this path must be calculated again for every step, so we end up with O(n²) time.
+This scheduler ends up with O(n²) complexity with the number of steps in the build. It requires linear time to determine the critical path, but this path must be calculated again for every step, so we end up with O(n²) time.
 
 Correctness
 -----------
@@ -611,7 +611,7 @@ simulate(zealots[:], parallelize, debug=True)
 Performance Comparison
 ======================
 
-Let's create a fairly complex problem to schedule and then measure the performance of each algorithm both in terms of compuational time and in terms of total makespan.
+Let's create a fairly complex problem to schedule and then measure the performance of each algorithm both in terms of computational time and in terms of total makespan.
 
 Makespan vs tasks
 -----------------
@@ -699,7 +699,7 @@ Depth-first branch and bound as suggested by Churchill[16] will produce an optim
 Genetic Algorithms
 ------------------
 
-Genetic algorithms are a common way to solve this problem. While not elimating the high computational complexity of the complete solution, genetic algorithms allow us to hopefully asymtotically approach the ideal solution with respect to computing time. Genetic algorithms have been applied in this field and created nice practical results.[19] One notable result was the discovery of the 7 Roach Rush in 2010.
+Genetic algorithms are a common way to solve this problem. While not eliminating the high computational complexity of the complete solution, genetic algorithms allow us to hopefully asymptotically approach the ideal solution with respect to computing time. Genetic algorithms have been applied in this field and created nice practical results.[19] One notable result was the discovery of the 7 Roach Rush in 2010.
 
 Future Work
 ===========
