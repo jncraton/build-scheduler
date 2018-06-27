@@ -261,6 +261,15 @@ An example of the overall architecture and usage of this algorithm is moder supe
 
 ![](media/intel-core2-arch.png)
 
+This is the basic algorithm we'll implement:
+
+    each game frame:
+      if we don't have an instruction in the reservation station:
+        for task in queue:
+          if task is runnable, add it to the reservation station
+
+Here's the implementation:
+
 ```python
 def reorder(eus, tasks, time, res):
   """
@@ -288,7 +297,7 @@ This algorithm is correct because it still includes all tasks. It returns provab
 Performance
 -----------
 
-In the worst case, this algorithm requires a linear scan of all current units, and because the number of units steadily increases, we see that this algorithm has O(n²) complexity.
+In the worst case, this algorithm requires a linear scan of all current units each game frame. Because the number of units steadily increases, we see that this algorithm has O(n²) complexity.
 
 Routine task automation heuristics
 ==================================
