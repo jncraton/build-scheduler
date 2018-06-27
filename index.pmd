@@ -690,6 +690,13 @@ Genetic Algorithms
 
 Genetic algorithms are a common way to solve this problem. While not elimating the high computational complexity of the complete solution, genetic algorithms allow us to hopefully asymtotically approach the ideal solution with respect to computing time. Genetic algorithms have been applied in this field and created nice practical results.[19] One notable result was the discovery of the 7 Roach Rush in 2010.
 
+Future Work
+===========
+
+There are certainly more complex algorithms that could be adapted to this task.
+
+The algorithms here also each assume a 1-base economy, which is an extreme simplification and makes these results very poor when compared against long build orders executed by professional players. Adding a more complete economic model should greatly improved total makespan and add very little computational complexity.
+
 References
 ==========
 
