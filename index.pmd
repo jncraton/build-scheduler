@@ -21,7 +21,7 @@ Let's define some StarCraft units:
 ```python
 from collections import namedtuple
 
-Unit = namedtuple('ExecutionUnit', ['name','executed_on','min','gas','supply','time','requires'])
+Unit = namedtuple('Unit', ['name','borrows','min','gas','supply','time','requires'])
 
 Nexus = Unit('Nexus','Probe',400,0,-10,75,tuple())
 Assimilator = Unit('Assimilator','Probe',100,0,0,25,tuple())
@@ -141,7 +141,7 @@ class ExecutionUnit:
     for r in task.requires:
       if not finished(eus, units[r]): return False
   
-    return not self.running and (task.executed_on == None or self.unit.name==task.executed_on)
+    return not self.running and (task.borrows == None or self.unit.name==task.borrows)
 ```
 
 Now let's add an `execute` function to schedule a set of tasks. This function takes a list of execution units, a list of tasks to complete, and a scheduler function to decide what to run.
@@ -431,7 +431,7 @@ def get_dag(tasks):
     for n2 in dag.nodes:
       weight=n2.task.time
       
-      if n2.task.executed_on == n1.task.name:
+      if n2.task.borrows == n1.task.name:
         weight = n2.task.time * math.ceil(dag.node[n2]['count'] / dag.node[n1]['count'])
         dag.add_edge(n1,n2,weight=weight)
         
@@ -581,9 +581,9 @@ def parallelize(eus, tasks, time, res):
   if not tasks: return
 
   final = nx.dag_longest_path(get_dag(tasks))[-1]
-  bottleneck = final.task.executed_on
+  bottleneck = final.task.borrows
 
-  completed = [e.unit for e in eus[5:] if e.unit.executed_on == 'Probe'] # Exclude starting units
+  completed = [e.unit for e in eus[5:] if e.unit.borrows == 'Probe'] # Exclude starting units
 
   current = nx.dag_longest_path_length(get_dag(completed + tasks))
   new = nx.dag_longest_path_length(get_dag(completed + tasks + [units[bottleneck]]))
