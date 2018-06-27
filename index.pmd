@@ -169,6 +169,12 @@ def execute(tasks, scheduler, units=[Nexus] + [Probe] * 4, debug=False, debug_co
 
   eus = [ExecutionUnit(unit) for unit in units]
 
+  if debug:
+    print("Creating optimized build order for:") 
+    for u in expected_units:
+      print("  %s: %d" % (u, expected_units[u]))
+    print("\nBuild order:")
+
   def message(msg):
     if debug:
       print('%3ds %4d ore %4d gas %3d supply   %s' % (time, res[0], res[1], res[2], msg))
@@ -209,10 +215,10 @@ def execute(tasks, scheduler, units=[Nexus] + [Probe] * 4, debug=False, debug_co
     raise Exception("Units were dropped from the build order")
 
   if debug:
-    print("\nUnits:")
+    print("\nFinal units:")
     for u in unit_count:
       print("  %s: %d" % (u, unit_count[u]))
-    print("Total makespan: %ds" % time)
+    print("\nTotal makespan: %ds" % time)
 
   return time
 ```
