@@ -569,7 +569,7 @@ draw_dag(get_dag(zealots))
 
 Our previous algorithm misses a key issue. While the gateway allows zealots to be built, it also creates a bottleneck. Right now, zealots are built individually over a long period of time. In Brood War, we have the option to invest in any number of gateways, so let's update our algorithm to handle explore that possibility.
 
-Let's try adding some tests to see if we can improve our longest path. Here's the current longest path:
+Let's try a test to see if we can shorten our path. Here's the current longest path:
 
 ```python
 nx.dag_longest_path_length(get_dag(zealots))
