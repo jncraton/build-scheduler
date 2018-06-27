@@ -16,7 +16,7 @@ StarCraft is a real-time strategy (RTS) game where players compete to build an e
 
 <iframe width="560" height="315" src="https://www.youtube-nocookie.com/embed/w_SKXc22Pmg?rel=0&amp;showinfo=0&amp;start=23" frameborder="0" allow="autoplay; encrypted-media" allowfullscreen></iframe>
 
-Let's define some StarCraft units:
+Let's define some StarCraft units. We'll borrow the conventions of three type of preconditions (required, borrowed and consumed).[16]
 
 ```python
 from collections import namedtuple
