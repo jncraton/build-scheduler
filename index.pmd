@@ -209,7 +209,9 @@ def execute(tasks, scheduler, units=[Nexus] + [Probe] * 4, debug=False, debug_co
     raise Exception("Units were dropped from the build order")
 
   if debug:
-    print("Units: %s" % unit_count)
+    print("Units:")
+    for u in unit_count:
+      print("  %s: %d" % (u, unit_count[u]))
     print("Total makespan: %ds" % time)
 
   return time
