@@ -375,11 +375,11 @@ def supply_gas_min(eus, tasks, time, res):
   if supply_gas(eus, tasks, time, res): return
   if automin(eus, tasks, time, res): return
 
-def reorder_autosupply(eus, tasks, time, res):
+def reorder_supply_gas_min(eus, tasks, time, res):
   reorder(eus, tasks, time, res)
   supply_gas_min(eus, tasks, time, res)
 
-simulate([Pylon, Gateway, Zealot, Zealot, CyberneticsCore, Dragoon], reorder_autosupply, debug=True)
+simulate([Pylon, Gateway, Zealot, Zealot, CyberneticsCore, Dragoon], reorder_supply_gas_min, debug=True)
 ```
 
 Now we should never be supply blocked. We can also see that this algorithm completes the requested tasks in the same amount of time as the above, but has a stronger economic position.
@@ -405,7 +405,7 @@ tasks = [Pylon, Gateway, CyberneticsCore,
          CitadelOfAdun, TemplarArchives, DarkTemplar
         ]
 
-simulate(tasks[:], reorder_autosupply, debug=True)
+simulate(tasks[:], reorder_supply_gas_min, debug=True)
 ```
 
 We need to add better planning to handle complicated dependencies. The first step to handling dependencies in a sensible way is to convert our operations into a directed acyclic graphs (DAG).
@@ -628,7 +628,7 @@ tasks = [Pylon,Gateway,
   DarkTemplar,DarkTemplar,DarkTemplar,DarkTemplar,
 ]
 
-algs = ['supply_gas', 'supply_gas_min', 'reorder_autosupply', 'critical_path', 'parallelize']
+algs = ['supply_gas', 'supply_gas_min', 'reorder_supply_gas_min', 'critical_path', 'parallelize']
 
 for alg in algs:
   makespan = []
