@@ -468,7 +468,7 @@ We'll simply apply Kahn's algorithm to do the sorting[10]. Here's the psuedocode
 
 Now we simply sort our DAG topologically:
 
-```python3
+```python
 [str(n) for n in nx.topological_sort(get_dag(tasks))]
 ```
 
