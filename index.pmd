@@ -145,6 +145,8 @@ class ExecutionUnit:
 Now let's add an `execute` function to schedule a set of tasks. This function takes a list of execution units, a list of tasks to complete, and a scheduler function to decide what to run.
 
 ```python
+from collections import Counter
+
 def execute(tasks, scheduler, units=[Nexus] + [Probe] * 4, debug=False, debug_completed=False):
   """
   Executes a set of tasks using a supplied scheduler
@@ -155,10 +157,15 @@ def execute(tasks, scheduler, units=[Nexus] + [Probe] * 4, debug=False, debug_co
   127
   >>> execute([Probe] * 4 + [Pylon, Gateway, Zealot, Nexus, Zealot], lambda *x: None)
   196
+  >>> execute([Probe] * 4 + [Pylon, Gateway, Zealot, Nexus, Zealot], lambda eus,tasks,*_: tasks.pop())
+  Traceback (most recent call last):
+      ...
+  Exception: Units were dropped from the build order
   """
 
   time = -1
   res = [50,0,6]
+  expected_units = Counter([e.name for e in tasks[:] + units[:]])
 
   eus = [ExecutionUnit(unit) for unit in units]
 
@@ -195,8 +202,14 @@ def execute(tasks, scheduler, units=[Nexus] + [Probe] * 4, debug=False, debug_co
     res[0] += mining_rate(bases, gases, peons)[0]
     res[1] += mining_rate(bases, gases, peons)[1]
 
+  unit_count = Counter([e.unit.name for e in eus])
+
+  # Confirm that we completed at least as many units as requested
+  if not all(n <= unit_count[k] for k, n in expected_units.items()):
+    raise Exception("Units were dropped from the build order")
+
   if debug:
-    print("Units: %s" % sorted([u.unit.name for u in eus]))
+    print("Units: %s" % unit_count)
     print("Total makespan: %ds" % time)
 
   return time
