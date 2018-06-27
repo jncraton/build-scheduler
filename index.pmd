@@ -445,6 +445,8 @@ draw_dag(get_dag(tasks))
 
 This DAG gives us the data sctructure we need to begin reasoning about how much overall makespan duration depends on a particular task and optimize our scheduling accordingly.
 
+Note that each task type is included only once in the DAG. The path weights are used to track total time to complete a set of identical task. For example, if the current schedule includes building 12 Zealots from 2 Gateways, the DAG will include a Gateway node pointing to a Zealot node with a weight of `(12 Zealot / 2 Gateways) * Zealot build time`. This optimization makes it possible to reason easily about paralell tasks by path length through the graph.
+
 Kahn's Algorithm
 ----------------
 
