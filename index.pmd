@@ -144,22 +144,22 @@ class ExecutionUnit:
     return not self.running and (task.borrows == None or self.unit.name==task.borrows)
 ```
 
-Now let's add an `execute` function to schedule a set of tasks. This function takes a list of execution units, a list of tasks to complete, and a scheduler function to decide what to run.
+Now let's add an `simulate` function to plan a list of tasks. This function takes a list of execution units, a list of tasks to complete, and a scheduler function to decide what to run each frame.
 
 ```python
 from collections import Counter
 
-def execute(tasks, scheduler, units=[Nexus] + [Probe] * 4, debug=False, debug_completed=False):
+def simulate(tasks, scheduler, units=[Nexus] + [Probe] * 4, debug=False, debug_completed=False):
   """
-  Executes a set of tasks using a supplied scheduler
+  Simulates a build for a list of tasks using a supplied scheduler
   
-  >>> execute([Pylon, Gateway], lambda *x: None)
+  >>> simulate([Pylon, Gateway], lambda *x: None)
   85
-  >>> execute([Probe] * 4 + [Pylon, Gateway, Zealot], lambda *x: None)
+  >>> simulate([Probe] * 4 + [Pylon, Gateway, Zealot], lambda *x: None)
   127
-  >>> execute([Probe] * 4 + [Pylon, Gateway, Zealot, Nexus, Zealot], lambda *x: None)
+  >>> simulate([Probe] * 4 + [Pylon, Gateway, Zealot, Nexus, Zealot], lambda *x: None)
   196
-  >>> execute([Probe] * 4 + [Pylon, Gateway, Zealot, Nexus, Zealot], lambda eus,tasks,*_: tasks.pop())
+  >>> simulate([Probe] * 4 + [Pylon, Gateway, Zealot, Nexus, Zealot], lambda eus,tasks,*_: tasks.pop())
   Traceback (most recent call last):
       ...
   Exception: Units were dropped from the build order
@@ -242,7 +242,7 @@ def fifo(eus, tasks, time, res):
 
 TASKS = [Probe] * 4 + [Pylon] + [Probe] * 4 + [Gateway, Zealot, Zealot]
 
-execute(TASKS[:], fifo, debug=True)
+simulate(TASKS[:], fifo, debug=True)
 ```
 
 One weakness of FIFO is that it fails to allow future tasks to run in paralell.
@@ -250,7 +250,7 @@ One weakness of FIFO is that it fails to allow future tasks to run in paralell.
 Correctness and performance
 ---------------------------
 
-This "algorithm" is obviously correct as all tasks are completed. It takes no time to execute as it doesn't do anything.
+This "algorithm" is obviously correct as all tasks are completed. It takes no time to simulate as it doesn't do anything.
 
 Reordering (out-of-order execution)
 ===================================
@@ -284,7 +284,7 @@ def reorder(eus, tasks, time, res):
         tasks.insert(0, tasks.pop(i))
         return
 
-execute(TASKS[:], reorder, debug=True)
+simulate(TASKS[:], reorder, debug=True)
 ```
 
 We were able to remove 23s of stalling on this simple task by simply using reordering.
@@ -292,7 +292,7 @@ We were able to remove 23s of stalling on this simple task by simply using reord
 Correctness
 -----------
 
-This algorithm is correct because it still includes all tasks. It returns provably suboptimal makespans in most cases as we will show soon. It adheres to the required dependencies, so tasks are not schduled until they are legally able to be executed.
+This algorithm is correct because it still includes all tasks. It returns provably suboptimal makespans in most cases as we will show soon. It adheres to the required dependencies, so tasks are not schduled until they are legally able to be simulated.
 
 Performance
 -----------
@@ -320,7 +320,7 @@ def reorder_automin(eus, tasks, time, res):
   reorder(eus, tasks, time, res)
   automin(eus, tasks, time, res)
 
-execute([Pylon, Gateway, Zealot, Zealot], reorder_automin, debug=True)
+simulate([Pylon, Gateway, Zealot, Zealot], reorder_automin, debug=True)
 ```
 
 Gas management
@@ -345,7 +345,7 @@ def reorder_autogas(eus, tasks, time, res):
   if autogas(eus, tasks, time, res): return
   if automin(eus, tasks, time, res): return
 
-execute([Pylon, Gateway, Zealot, Zealot, Pylon, CyberneticsCore, Dragoon], reorder_autogas, debug=True)
+simulate([Pylon, Gateway, Zealot, Zealot, Pylon, CyberneticsCore, Dragoon], reorder_autogas, debug=True)
 ```
 
 This handles ensuring that we don't get blocked on units that require gas, but it is a very weak planning method.
@@ -379,7 +379,7 @@ def reorder_autosupply(eus, tasks, time, res):
   reorder(eus, tasks, time, res)
   supply_gas_min(eus, tasks, time, res)
 
-execute([Pylon, Gateway, Zealot, Zealot, CyberneticsCore, Dragoon], reorder_autosupply, debug=True)
+simulate([Pylon, Gateway, Zealot, Zealot, CyberneticsCore, Dragoon], reorder_autosupply, debug=True)
 ```
 
 Now we should never be supply blocked. We can also see that this algorithm completes the requested tasks in the same amount of time as the above, but has a stronger economic position.
@@ -405,7 +405,7 @@ tasks = [Pylon, Gateway, CyberneticsCore,
          CitadelOfAdun, TemplarArchives, DarkTemplar
         ]
 
-execute(tasks[:], reorder_autosupply, debug=True)
+simulate(tasks[:], reorder_autosupply, debug=True)
 ```
 
 We need to add better planning to handle complicated dependencies. The first step to handling dependencies in a sensible way is to convert our operations into a directed acyclic graphs (DAG).
@@ -536,10 +536,10 @@ def critical_path(eus, tasks, time, res):
   tasks.remove(new_start.task)
   tasks.insert(0, new_start.task)
 
-execute(tasks[:], critical_path, debug=True)
+simulate(tasks[:], critical_path, debug=True)
 ```
 
-Note that the scheduler must recalculate the critical path on each run as the first element of the critical path may sometimes not be the second element from the previous run. This is due to the fact that there may be multiple paralell paths that need to be executed in slices to optimize time efficiency.
+Note that the scheduler must recalculate the critical path on each run as the first element of the critical path may sometimes not be the second element from the previous run. This is due to the fact that there may be multiple paralell paths that need to be simulated in slices to optimize time efficiency.
 
 Performance
 -----------
@@ -558,7 +558,7 @@ The next thing that we need to add to our scheduler is the concept of bottleneck
 
 ```python
 zealots = [Pylon,Gateway] + [Zealot]*12
-execute(zealots[:], critical_path, debug=True)
+simulate(zealots[:], critical_path, debug=True)
 ```
 
 And the simple DAG:
@@ -605,7 +605,7 @@ def parallelize(eus, tasks, time, res):
 
   critical_path(eus, tasks, time, res)
   
-execute(zealots[:], parallelize, debug=True)
+simulate(zealots[:], parallelize, debug=True)
 ```
 
 Performance Comparison
@@ -633,7 +633,7 @@ algs = ['supply_gas', 'supply_gas_min', 'reorder_autosupply', 'critical_path', '
 for alg in algs:
   makespan = []
   for i in range(0, len(tasks), 5):
-    makespan.append((i, execute(tasks[0:i], locals()[alg])))
+    makespan.append((i, simulate(tasks[0:i], locals()[alg])))
 
   plt.plot([m[0] for m in makespan], [m[1] for m in makespan], label=alg)
 
@@ -672,7 +672,7 @@ for alg in algs:
   runtime = []
   for i in range(0, len(tasks), 5):
     start = time.process_time()
-    execute(tasks[0:i], locals()[alg])
+    simulate(tasks[0:i], locals()[alg])
     runtime.append((i, (time.process_time() - start) * 10))
 
   plt.plot([m[0] for m in runtime], [m[1] for m in runtime], label=alg)
@@ -706,7 +706,7 @@ Future Work
 
 There are certainly more complex algorithms that could be adapted to this task.
 
-The algorithms here also each assume a 1-base economy, which is an extreme simplification and makes these results very poor when compared against long build orders executed by professional players. Adding a more complete economic model should greatly improved total makespan and add very little computational complexity.
+The algorithms here also each assume a 1-base economy, which is an extreme simplification and makes these results very poor when compared against long build orders simulated by professional players. Adding a more complete economic model should greatly improved total makespan and add very little computational complexity.
 
 References
 ==========
