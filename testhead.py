@@ -1,5 +1,5 @@
 import matplotlib
 try:
  get_ipython().config
-except:
+except NameError:
  matplotlib.use("Agg")
